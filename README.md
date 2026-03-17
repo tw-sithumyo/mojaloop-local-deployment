@@ -70,10 +70,23 @@ Optional `wallet2` DFSP bootstrap and inter-DFSP test:
 
 Stop commands:
 
+- stop the local web UI: `local/scripts/stop-ui.sh`
 - stop core services: `local/scripts/stop-services.sh`
 - stop wallet-side MTPA services: `local/scripts/stop-wallet-services.sh`
 - stop infra: `local/scripts/stop-infra.sh`
 - stop everything: `local/scripts/stop-all.sh`
+
+Optional local UI:
+
+- start: `local/scripts/start-ui.sh`
+- stop: `local/scripts/stop-ui.sh`
+- URL: `http://127.0.0.1:3400`
+
+The UI is read-only. It shows:
+
+- service and infra up/down state
+- HTTP health checks where available
+- current log tail for the selected component
 
 The `wallet1` flow is intentionally minimal for now:
 

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mojaloop Local UI</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Local Control Surface</p>
+        <h1>Mojaloop service and log view</h1>
+        <p class="lede">
+          Read-only dashboard for the local stack. It polls health endpoints, shows process state,
+          and tails the current service logs without requiring another dependency chain.
+        </p>
+        <div class="hero-actions">
+          <button id="refreshButton" class="action">Refresh now</button>
+          <span id="lastUpdated" class="stamp">Waiting for first update</span>
+        </div>
+      </section>
+
+      <section class="summary" id="summary"></section>
+
+      <section class="board">
+        <div class="services-panel">
+          <div class="panel-header">
+            <h2>Services</h2>
+            <div class="legend">
+              <span class="legend-chip ok">Running</span>
+              <span class="legend-chip error">Stopped</span>
+              <span class="legend-chip warn">Health issue</span>
+            </div>
+          </div>
+          <div id="services" class="service-groups"></div>
+        </div>
+
+        <div class="logs-panel">
+          <div class="panel-header">
+            <div>
+              <h2 id="logTitle">Logs</h2>
+              <p id="logMeta" class="meta">Select a service card to view its log.</p>
+            </div>
+            <label class="lines-picker">
+              <span>Lines</span>
+              <select id="lineCount">
+                <option value="120">120</option>
+                <option value="240" selected>240</option>
+                <option value="500">500</option>
+                <option value="900">900</option>
+              </select>
+            </label>
+          </div>
+          <pre id="logOutput" class="log-output">No service selected.</pre>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
