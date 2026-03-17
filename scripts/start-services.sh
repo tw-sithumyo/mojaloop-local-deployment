@@ -20,7 +20,7 @@ start_service() {
   )
 }
 
-start_service central-ledger-api central-ledger 3001 env CLEDG_PROXY_CACHE__enabled=false npm run start:api
+start_service central-ledger-api central-ledger 3001 env CLEDG_PROXY_CACHE__enabled=false CLEDG_ENABLE_ON_US_TRANSFERS=true npm run start:api
 start_service ml-api-adapter-api ml-api-adapter 3000 env MLAPI_PROXY_CACHE__enabled=false MLAPI_PAYLOAD_CACHE__enabled=false npm run start:api
 start_service account-lookup-api account-lookup-service 4002 env ALS_PROXY_CACHE__enabled=true ALS_PROXY_CACHE__type=redis ALS_PROXY_CACHE__proxyConfig__host=127.0.0.1 ALS_PROXY_CACHE__proxyConfig__port=6379 npm run start:api
 start_service account-lookup-admin account-lookup-service 4001 env ALS_PROXY_CACHE__enabled=true ALS_PROXY_CACHE__type=redis ALS_PROXY_CACHE__proxyConfig__host=127.0.0.1 ALS_PROXY_CACHE__proxyConfig__port=6379 npm run start:admin
