@@ -1,0 +1,8 @@
+data/
+logs/
+run/
+
+# Generated at runtime by the local bootstrap scripts.
+config/bootstrap.sql
+config/kafka.properties
+config/my.cnf
