@@ -1,6 +1,54 @@
 # Local Mojaloop Bootstrap
 
-This directory contains a non-container bootstrap for a minimal Mojaloop core stack in this workspace.
+This repository is not standalone.
+
+`local/env.sh` sets `ROOT_DIR` to the parent directory of this repository, so the bootstrap expects a shared workspace layout with this repo and the service repos cloned side-by-side.
+
+All commands below are run from `ROOT_DIR`, which is the parent directory of `local/`, not from inside `local/` itself.
+
+Expected workspace layout:
+
+```text
+<workspace>/
+  local/
+  central-ledger/
+  account-lookup-service/
+  ml-api-adapter/
+  quoting-service/
+  central-settlement/
+  mtpa/                       # optional, only needed for wallet DFSP flows
+  tools/
+  runtime-root/
+```
+
+Required sibling repos for the core stack:
+
+- `central-ledger`
+- `account-lookup-service`
+- `ml-api-adapter`
+- `quoting-service`
+- `central-settlement`
+
+Additional sibling repo for the wallet DFSP flows in this README:
+
+- `mtpa`
+
+Example clone layout:
+
+```bash
+mkdir -p ~/work/mojaloop
+cd ~/work/mojaloop
+
+git clone <your-local-fork> local
+git clone <central-ledger-fork-or-upstream> central-ledger
+git clone <account-lookup-service-fork-or-upstream> account-lookup-service
+git clone <ml-api-adapter-fork-or-upstream> ml-api-adapter
+git clone <quoting-service-fork-or-upstream> quoting-service
+git clone <central-settlement-fork-or-upstream> central-settlement
+git clone <mtpa-fork-or-upstream> mtpa
+```
+
+This directory contains a non-container bootstrap for a minimal Mojaloop core stack in that workspace.
 
 Order:
 
