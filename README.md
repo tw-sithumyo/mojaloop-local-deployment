@@ -68,6 +68,13 @@ Optional `wallet2` DFSP bootstrap and inter-DFSP test:
 8. `local/scripts/setup-wallet2.sh`
 9. `local/scripts/test-wallet1-wallet2-flow.sh`
 
+Stop commands:
+
+- stop core services: `local/scripts/stop-services.sh`
+- stop wallet-side MTPA services: `local/scripts/stop-wallet-services.sh`
+- stop infra: `local/scripts/stop-infra.sh`
+- stop everything: `local/scripts/stop-all.sh`
+
 The `wallet1` flow is intentionally minimal for now:
 
 - it uses `mtpa` as the DFSP app layer
