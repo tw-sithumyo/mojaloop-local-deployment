@@ -2,6 +2,8 @@ const refreshButton = document.querySelector('#refreshButton');
 const lastUpdated = document.querySelector('#lastUpdated');
 const summary = document.querySelector('#summary');
 const servicesRoot = document.querySelector('#services');
+const serviceSearch = document.querySelector('#serviceSearch');
+const serviceFilterMeta = document.querySelector('#serviceFilterMeta');
 const logTitle = document.querySelector('#logTitle');
 const logMeta = document.querySelector('#logMeta');
 const logOutput = document.querySelector('#logOutput');
@@ -10,6 +12,7 @@ const lineCount = document.querySelector('#lineCount');
 const state = {
   services: [],
   selectedServiceId: null,
+  searchTerm: '',
 };
 
 const groupOrder = ['infra', 'core', 'wallet'];
@@ -50,6 +53,27 @@ const healthLabel = (service) => {
   return 'Health unknown';
 };
 
+const filteredServices = () => {
+  const term = state.searchTerm.trim().toLowerCase();
+
+  if (term.length === 0) {
+    return state.services;
+  }
+
+  return state.services.filter((service) => {
+    const haystack = [
+      service.name,
+      service.id,
+      service.group,
+      service.port != null ? String(service.port) : '',
+      service.health?.detail ?? '',
+      service.log?.path ?? '',
+    ].join(' ').toLowerCase();
+
+    return haystack.includes(term);
+  });
+};
+
 const renderSummary = (totals) => {
   summary.innerHTML = `
     <article class="summary-card">
@@ -73,13 +97,23 @@ const renderSummary = (totals) => {
 
 const renderServices = () => {
   const grouped = new Map(groupOrder.map((group) => [group, []]));
+  const visibleServices = filteredServices();
 
-  for (const service of state.services) {
+  for (const service of visibleServices) {
     grouped.get(service.group)?.push(service);
   }
 
-  servicesRoot.innerHTML = groupOrder.map((group) => {
+  const visibleCount = visibleServices.length;
+  serviceFilterMeta.textContent = state.searchTerm.trim().length === 0
+    ? `Showing all ${state.services.length} services.`
+    : `Showing ${visibleCount} of ${state.services.length} services for "${state.searchTerm.trim()}".`;
+
+  const groupsHtml = groupOrder.map((group) => {
     const services = grouped.get(group) ?? [];
+    if (services.length === 0) {
+      return '';
+    }
+
     return `
       <section class="service-group">
         <header class="group-header">
@@ -107,6 +141,17 @@ const renderServices = () => {
       </section>
     `;
   }).join('');
+
+  if (visibleCount === 0) {
+    servicesRoot.innerHTML = `
+      <section class="empty-state">
+        <h3>No services match this filter.</h3>
+        <p>Try a DFSP name, service id, group, or port number.</p>
+      </section>
+    `;
+  } else {
+    servicesRoot.innerHTML = groupsHtml;
+  }
 
   for (const button of servicesRoot.querySelectorAll('[data-service-id]')) {
     button.addEventListener('click', () => {
@@ -179,6 +224,11 @@ refreshButton.addEventListener('click', () => {
 
 lineCount.addEventListener('change', () => {
   void refreshLogs();
+});
+
+serviceSearch.addEventListener('input', () => {
+  state.searchTerm = serviceSearch.value;
+  renderServices();
 });
 
 void refreshAll();

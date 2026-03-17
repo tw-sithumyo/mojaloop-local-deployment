@@ -26,13 +26,20 @@
       <section class="board">
         <div class="services-panel">
           <div class="panel-header">
-            <h2>Services</h2>
+            <div>
+              <h2>Services</h2>
+              <p id="serviceFilterMeta" class="meta">Showing all services.</p>
+            </div>
             <div class="legend">
               <span class="legend-chip ok">Running</span>
               <span class="legend-chip error">Stopped</span>
               <span class="legend-chip warn">Health issue</span>
             </div>
           </div>
+          <label class="search-box">
+            <span class="search-label">Search</span>
+            <input id="serviceSearch" type="search" placeholder="Filter by name, id, group, or port">
+          </label>
           <div id="services" class="service-groups"></div>
         </div>
 
