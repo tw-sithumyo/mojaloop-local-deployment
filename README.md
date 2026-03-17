@@ -39,13 +39,13 @@ Example clone layout:
 mkdir -p ~/work/mojaloop
 cd ~/work/mojaloop
 
-git clone <your-local-fork> local
-git clone <central-ledger-fork-or-upstream> central-ledger
-git clone <account-lookup-service-fork-or-upstream> account-lookup-service
-git clone <ml-api-adapter-fork-or-upstream> ml-api-adapter
-git clone <quoting-service-fork-or-upstream> quoting-service
-git clone <central-settlement-fork-or-upstream> central-settlement
-git clone <mtpa-fork-or-upstream> mtpa
+git clone --branch codex/mojaloop-local https://github.com/tw-sithumyo/mojaloop-local-deployment.git local
+git clone https://github.com/mojaloop/central-ledger.git central-ledger
+git clone https://github.com/mojaloop/account-lookup-service.git account-lookup-service
+git clone --branch codex/mojaloop-local https://github.com/tw-sithumyo/ml-api-adapter.git ml-api-adapter
+git clone https://github.com/mojaloop/quoting-service.git quoting-service
+git clone https://github.com/mojaloop/central-settlement.git central-settlement
+git clone --branch codex/mojaloop-local https://github.com/tw-sithumyo/mtpa.git mtpa
 ```
 
 This directory contains a non-container bootstrap for a minimal Mojaloop core stack in that workspace.
