@@ -6,6 +6,22 @@ This repository is not standalone.
 
 All commands below are run from `ROOT_DIR`, which is the parent directory of `local/`, not from inside `local/` itself.
 
+Tool prerequisites:
+
+- Node.js and `npm`
+  - expected under `tools/node-v22.22.0-linux-x64`
+- Java runtime
+  - expected under `tools/jdk-21.0.10+7-jre`
+- Kafka binaries
+  - expected under `tools/kafka_2.13-3.9.1`
+- Local runtime binaries for infra
+  - expected under `runtime-root/usr/bin`
+  - used for `mariadbd`, `mariadb-admin`, and `valkey-server`
+- Standard shell tools available on the machine
+  - `git`, `curl`, `tar`, `ss`, `pgrep`, `awk`, `setsid`, `rg`
+
+After `source local/env.sh`, the bootstrap scripts prefer these workspace-local tool paths over system-wide installs.
+
 Expected workspace layout:
 
 ```text
