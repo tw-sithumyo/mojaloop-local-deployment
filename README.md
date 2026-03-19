@@ -22,6 +22,21 @@ Tool prerequisites:
 
 After `source local/env.sh`, the bootstrap scripts prefer these workspace-local tool paths over system-wide installs.
 
+If `tools/` is empty, install the expected workspace-local toolchain with:
+
+```bash
+local/scripts/install-tools.sh
+```
+
+This installs:
+
+- Node.js + `npm`
+- Java runtime
+- Kafka
+- NATS server
+
+It does not build `runtime-root/`; that still needs to exist separately for MariaDB and Valkey binaries.
+
 Expected workspace layout:
 
 ```text
