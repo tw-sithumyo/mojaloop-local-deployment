@@ -10,8 +10,14 @@ Tool prerequisites:
 
 - Node.js and `npm`
   - expected under `tools/node-v22.22.0-linux-x64`
-- Java runtime
-  - expected under `tools/jdk-21.0.10+7-jre`
+- Java
+  - expected under `tools/jdk-21.0.10+7`
+  - `local/env.sh` falls back to `tools/jdk-21.0.10+7-jre` if only the JRE exists
+- CC build JDK
+  - expected under `tools/jdk-11.0.27+6`
+  - `ml-thitsawallet-cc` follows its own Dockerfile and builds cleanly on JDK 11
+- Maven
+  - expected under `tools/apache-maven-3.9.10`
 - Kafka binaries
   - expected under `tools/kafka_2.13-3.9.1`
 - Local runtime binaries for infra
@@ -31,9 +37,11 @@ local/scripts/install-tools.sh
 This installs:
 
 - Node.js + `npm`
-- Java runtime
+- Java
+- JDK 11 for `ml-thitsawallet-cc`
 - Kafka
 - NATS server
+- Maven
 
 It does not build `runtime-root/`; that still needs to exist separately for MariaDB and Valkey binaries.
 
@@ -47,7 +55,8 @@ Expected workspace layout:
   ml-api-adapter/
   quoting-service/
   central-settlement/
-  mtpa/                       # optional, only needed for wallet DFSP flows
+  sdk-scheme-adapter/         # optional, only needed for wallet DFSP flows
+  ml-thitsawallet-cc/         # optional, only needed for wallet DFSP flows
   tools/
   runtime-root/
 ```
@@ -62,7 +71,8 @@ Required sibling repos for the core stack:
 
 Additional sibling repo for the wallet DFSP flows in this README:
 
-- `mtpa`
+- `sdk-scheme-adapter`
+- `ml-thitsawallet-cc`
 
 Example clone layout:
 
@@ -76,7 +86,8 @@ git clone https://github.com/mojaloop/account-lookup-service.git account-lookup-
 git clone --branch codex/mojaloop-local https://github.com/tw-sithumyo/ml-api-adapter.git ml-api-adapter
 git clone https://github.com/mojaloop/quoting-service.git quoting-service
 git clone https://github.com/mojaloop/central-settlement.git central-settlement
-git clone --branch codex/mojaloop-local https://github.com/tw-sithumyo/mtpa.git mtpa
+git clone https://github.com/mojaloop/sdk-scheme-adapter.git sdk-scheme-adapter
+git clone https://github.com/tw-sithumyo/ml-thitsawallet-cc.git ml-thitsawallet-cc
 ```
 
 This directory contains a non-container bootstrap for a minimal Mojaloop core stack in that workspace.
@@ -89,7 +100,7 @@ Order:
 4. `local/scripts/migrate-all.sh`
 5. `local/scripts/start-services.sh`
 
-Optional `wallet1` DFSP bootstrap with `mtpa`:
+Optional `wallet1` DFSP bootstrap with `sdk-scheme-adapter` + `ml-thitsawallet-cc`:
 
 6. `local/scripts/setup-wallet1.sh`
 7. `local/scripts/test-wallet1-flow.sh`
@@ -103,7 +114,7 @@ Stop commands:
 
 - stop the local web UI: `local/scripts/stop-ui.sh`
 - stop core services: `local/scripts/stop-services.sh`
-- stop wallet-side MTPA services: `local/scripts/stop-wallet-services.sh`
+- stop wallet-side CC + SDK services: `local/scripts/stop-wallet-services.sh`
 - stop infra: `local/scripts/stop-infra.sh`
 - stop everything: `local/scripts/stop-all.sh`
 
@@ -119,16 +130,16 @@ The UI is read-only. It shows:
 - HTTP health checks where available
 - current log tail for the selected component
 
-The `wallet1` flow is intentionally minimal for now:
+The wallet flow in this branch is local-process only:
 
-- it uses `mtpa` as the DFSP app layer
-- it starts a local `nats-server` with JetStream
-- it creates the required `PAYPORT_FSPIOP` and `PAYPORT_AUDIT` streams
-- it onboards `wallet1` into Central Ledger
-- it enables on-us transfers in local `central-ledger` so a single-DFSP self-flow can complete
-- it verifies a self-flow using `lookup -> quote -> transfer`
+- it does not use Docker or Docker Compose
+- it uses `sdk-scheme-adapter` as the hub-facing DFSP adapter
+- it uses `ml-thitsawallet-cc` as the wallet-facing core connector
+- it runs a tiny local mock backend per wallet for quote and transfer crediting
+- it onboards `wallet1` and `wallet2` into Central Ledger with callback endpoints that point to the local `sdk-scheme-adapter` inbound ports
+- it verifies a real `wallet1 -> wallet2` 3-step CC flow using `sendmoney -> acceptParty -> acceptQuote -> transfer`
 
 Current limitation:
 
-- `mtpa` outbound lookup currently requires `destination`, so the first-cut `wallet1` test flow is a directed lookup to `wallet1` rather than an oracle-driven party discovery flow
-- the `wallet1 -> wallet2` test flow is also a directed lookup, but it exercises a real cross-DFSP `lookup -> quote -> transfer` path with distinct parties
+- the current `wallet1 -> wallet2` flow is a directed payee lookup through the hub because the payer request includes `to.fspId=wallet2`
+- it does not register ALS oracle data for true identifier-only oracle lookup yet

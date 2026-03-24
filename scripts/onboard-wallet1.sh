@@ -3,7 +3,7 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
 
-ENV_FILE="$CONF_DIR/wallet1-mtpa.env"
+ENV_FILE="$CONF_DIR/wallet1.env"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "Missing wallet1 env file: $ENV_FILE" >&2
@@ -63,14 +63,14 @@ ensure_hub_account() {
   accounts_json="$(json_get "/participants/Hub/accounts")"
   if echo "$accounts_json" | node -e "
     const data = JSON.parse(require('fs').readFileSync(0, 'utf8'));
-    const found = Array.isArray(data) && data.some((entry) => entry.ledgerAccountType === '$account_type' && entry.currency === '$WALLET1_CURRENCY');
+    const found = Array.isArray(data) && data.some((entry) => entry.ledgerAccountType === '$account_type' && entry.currency === '$CURRENCY');
     process.exit(found ? 0 : 1);
   "; then
     return
   fi
 
   api_post "/participants/Hub/accounts" "{
-    \"currency\": \"$WALLET1_CURRENCY\",
+    \"currency\": \"$CURRENCY\",
     \"type\": \"$account_type\"
   }"
 }
@@ -80,7 +80,7 @@ ensure_settlement_model() {
   models_json="$(json_get "/settlementModels")"
   if echo "$models_json" | node -e "
     const data = JSON.parse(require('fs').readFileSync(0, 'utf8'));
-    const found = Array.isArray(data) && data.some((entry) => entry.name === 'DEFERREDNET' && entry.currency === '$WALLET1_CURRENCY');
+    const found = Array.isArray(data) && data.some((entry) => entry.name === 'DEFERREDNET' && entry.currency === '$CURRENCY');
     process.exit(found ? 0 : 1);
   "; then
     return
@@ -94,7 +94,7 @@ ensure_settlement_model() {
     \"requireLiquidityCheck\": true,
     \"ledgerAccountType\": \"POSITION\",
     \"autoPositionReset\": true,
-    \"currency\": \"$WALLET1_CURRENCY\",
+    \"currency\": \"$CURRENCY\",
     \"settlementAccountType\": \"SETTLEMENT\"
   }"
 }
@@ -108,7 +108,7 @@ ensure_participant() {
 
   api_post "/participants" "{
     \"name\": \"$PARTICIPANT_NAME\",
-    \"currency\": \"$WALLET1_CURRENCY\",
+    \"currency\": \"$CURRENCY\",
     \"isProxy\": false
   }"
 }
@@ -118,17 +118,17 @@ ensure_initial_position_and_limits() {
   limits_json="$(json_get "/participants/$PARTICIPANT_NAME/limits")"
   if echo "$limits_json" | node -e "
     const data = JSON.parse(require('fs').readFileSync(0, 'utf8'));
-    const found = Array.isArray(data) && data.some((entry) => entry.currency === '$WALLET1_CURRENCY' && entry.limit?.type === 'NET_DEBIT_CAP');
+    const found = Array.isArray(data) && data.some((entry) => entry.currency === '$CURRENCY' && entry.limit?.type === 'NET_DEBIT_CAP');
     process.exit(found ? 0 : 1);
   "; then
     return
   fi
 
   api_post "/participants/$PARTICIPANT_NAME/initialPositionAndLimits" "{
-    \"currency\": \"$WALLET1_CURRENCY\",
+    \"currency\": \"$CURRENCY\",
     \"limit\": {
       \"type\": \"NET_DEBIT_CAP\",
-      \"value\": $WALLET1_INITIAL_NET_DEBIT_CAP
+      \"value\": $INITIAL_NET_DEBIT_CAP
     },
     \"initialPosition\": 0
   }"
@@ -138,7 +138,7 @@ get_settlement_account_id() {
   json_get "/participants/$PARTICIPANT_NAME/accounts" | node -e "
     const data = JSON.parse(require('fs').readFileSync(0, 'utf8'));
     const account = Array.isArray(data)
-      ? data.find((entry) => entry.ledgerAccountType === 'SETTLEMENT' && entry.currency === '$WALLET1_CURRENCY')
+      ? data.find((entry) => entry.ledgerAccountType === 'SETTLEMENT' && entry.currency === '$CURRENCY')
       : undefined;
     if (!account) process.exit(1);
     process.stdout.write(String(account.id));
@@ -149,10 +149,10 @@ settlement_balance_is_funded() {
   json_get "/participants/$PARTICIPANT_NAME/accounts" | node -e "
     const data = JSON.parse(require('fs').readFileSync(0, 'utf8'));
     const account = Array.isArray(data)
-      ? data.find((entry) => entry.ledgerAccountType === 'SETTLEMENT' && entry.currency === '$WALLET1_CURRENCY')
+      ? data.find((entry) => entry.ledgerAccountType === 'SETTLEMENT' && entry.currency === '$CURRENCY')
       : undefined;
     const value = BigInt(String(account?.value ?? '0'));
-    const threshold = BigInt('$WALLET1_INITIAL_FUNDS');
+    const threshold = BigInt('$INITIAL_FUNDS');
     const funded = value >= threshold || value <= -threshold;
     process.exit(funded ? 0 : 1);
   "
@@ -174,8 +174,8 @@ ensure_funds() {
     \"action\": \"recordFundsIn\",
     \"reason\": \"wallet1-bootstrap\",
     \"amount\": {
-      \"amount\": \"$WALLET1_INITIAL_FUNDS\",
-      \"currency\": \"$WALLET1_CURRENCY\"
+      \"amount\": \"$INITIAL_FUNDS\",
+      \"currency\": \"$CURRENCY\"
     }
   }"
 }
@@ -213,6 +213,10 @@ ensure_endpoint FSPIOP_CALLBACK_URL_PARTIES_PUT "http://127.0.0.1:${WEB_INBOUND_
 ensure_endpoint FSPIOP_CALLBACK_URL_PARTIES_SUB_ID_PUT "http://127.0.0.1:${WEB_INBOUND_PORT}/parties/{{partyIdType}}/{{partyIdentifier}}/{{partySubIdOrType}}"
 ensure_endpoint FSPIOP_CALLBACK_URL_PARTIES_PUT_ERROR "http://127.0.0.1:${WEB_INBOUND_PORT}/parties/{{partyIdType}}/{{partyIdentifier}}/error"
 ensure_endpoint FSPIOP_CALLBACK_URL_PARTIES_SUB_ID_PUT_ERROR "http://127.0.0.1:${WEB_INBOUND_PORT}/parties/{{partyIdType}}/{{partyIdentifier}}/{{partySubIdOrType}}/error"
+ensure_endpoint FSPIOP_CALLBACK_URL_PARTICIPANT_PUT "http://127.0.0.1:${WEB_INBOUND_PORT}/participants/{{partyIdType}}/{{partyIdentifier}}"
+ensure_endpoint FSPIOP_CALLBACK_URL_PARTICIPANT_SUB_ID_PUT "http://127.0.0.1:${WEB_INBOUND_PORT}/participants/{{partyIdType}}/{{partyIdentifier}}/{{partySubIdOrType}}"
+ensure_endpoint FSPIOP_CALLBACK_URL_PARTICIPANT_PUT_ERROR "http://127.0.0.1:${WEB_INBOUND_PORT}/participants/{{partyIdType}}/{{partyIdentifier}}/error"
+ensure_endpoint FSPIOP_CALLBACK_URL_PARTICIPANT_SUB_ID_PUT_ERROR "http://127.0.0.1:${WEB_INBOUND_PORT}/participants/{{partyIdType}}/{{partyIdentifier}}/{{partySubIdOrType}}/error"
 ensure_endpoint FSPIOP_CALLBACK_URL_QUOTES "http://127.0.0.1:${WEB_INBOUND_PORT}"
 ensure_endpoint FSPIOP_CALLBACK_URL_TRANSFER_POST "http://127.0.0.1:${WEB_INBOUND_PORT}/transfers"
 ensure_endpoint FSPIOP_CALLBACK_URL_TRANSFER_PUT "http://127.0.0.1:${WEB_INBOUND_PORT}/transfers/{{transferId}}"

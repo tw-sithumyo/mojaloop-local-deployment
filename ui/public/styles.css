@@ -326,19 +326,42 @@ body {
 }
 
 .log-output {
+  --log-bg: #101713;
+  --log-fg: #e7f4ea;
   margin: 1rem 0 0;
   padding: 1rem;
   min-height: 32rem;
   max-height: 70vh;
   overflow: auto;
   border-radius: 1rem;
-  background: #101713;
-  color: #e7f4ea;
+  background: var(--log-bg);
+  color: var(--log-fg);
   border: 1px solid rgba(255, 255, 255, 0.06);
   font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   font-size: 0.88rem;
   line-height: 1.5;
   white-space: pre-wrap;
+}
+
+.ansi-fragment {
+  border-radius: 0.22rem;
+}
+
+.ansi-bold {
+  font-weight: 700;
+}
+
+.ansi-dim {
+  opacity: 0.72;
+}
+
+.ansi-italic {
+  font-style: italic;
+}
+
+.ansi-underline {
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
 }
 
 @media (max-width: 1024px) {

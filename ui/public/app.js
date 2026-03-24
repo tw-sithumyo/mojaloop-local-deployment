@@ -22,10 +22,246 @@ const groupTitles = {
   wallet: 'Wallet and MTPA',
 };
 
+const ansiPattern = /\u001b\[([0-9;]*)m/g;
+
+const ansiNamedColors = {
+  30: '#20252b',
+  31: '#f26d78',
+  32: '#69d48f',
+  33: '#f1c56b',
+  34: '#7db5ff',
+  35: '#c792ea',
+  36: '#68d7e5',
+  37: '#e8eef2',
+  90: '#7d8793',
+  91: '#ff8c96',
+  92: '#90efaa',
+  93: '#ffd98d',
+  94: '#9dc9ff',
+  95: '#ddb1ff',
+  96: '#8ae6f1',
+  97: '#ffffff',
+};
+
 const escapeHtml = (value) => value
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
   .replaceAll('>', '&gt;');
+
+const defaultAnsiState = () => ({
+  bold: false,
+  dim: false,
+  italic: false,
+  underline: false,
+  inverse: false,
+  fg: null,
+  bg: null,
+});
+
+const clampColor = (value) => Math.max(0, Math.min(255, value));
+
+const xtermColor = (index) => {
+  if (index < 16) {
+    const key = index < 8 ? 30 + index : 90 + (index - 8);
+    return ansiNamedColors[key];
+  }
+
+  if (index >= 16 && index <= 231) {
+    const offset = index - 16;
+    const levels = [0, 95, 135, 175, 215, 255];
+    const red = levels[Math.floor(offset / 36) % 6];
+    const green = levels[Math.floor(offset / 6) % 6];
+    const blue = levels[offset % 6];
+    return `rgb(${red}, ${green}, ${blue})`;
+  }
+
+  const shade = clampColor(8 + ((index - 232) * 10));
+  return `rgb(${shade}, ${shade}, ${shade})`;
+};
+
+const applyAnsiCodes = (state, rawCodes) => {
+  const codes = rawCodes.length === 0 ? [0] : rawCodes;
+
+  for (let index = 0; index < codes.length; index += 1) {
+    const code = codes[index];
+
+    if (Number.isNaN(code)) {
+      continue;
+    }
+
+    if (code === 0) {
+      state.bold = false;
+      state.dim = false;
+      state.italic = false;
+      state.underline = false;
+      state.inverse = false;
+      state.fg = null;
+      state.bg = null;
+      continue;
+    }
+
+    if (code === 1) {
+      state.bold = true;
+      continue;
+    }
+
+    if (code === 2) {
+      state.dim = true;
+      continue;
+    }
+
+    if (code === 3) {
+      state.italic = true;
+      continue;
+    }
+
+    if (code === 4) {
+      state.underline = true;
+      continue;
+    }
+
+    if (code === 7) {
+      state.inverse = true;
+      continue;
+    }
+
+    if (code === 22) {
+      state.bold = false;
+      state.dim = false;
+      continue;
+    }
+
+    if (code === 23) {
+      state.italic = false;
+      continue;
+    }
+
+    if (code === 24) {
+      state.underline = false;
+      continue;
+    }
+
+    if (code === 27) {
+      state.inverse = false;
+      continue;
+    }
+
+    if (code === 39) {
+      state.fg = null;
+      continue;
+    }
+
+    if (code === 49) {
+      state.bg = null;
+      continue;
+    }
+
+    if ((code >= 30 && code <= 37) || (code >= 90 && code <= 97)) {
+      state.fg = ansiNamedColors[code] ?? null;
+      continue;
+    }
+
+    if ((code >= 40 && code <= 47) || (code >= 100 && code <= 107)) {
+      state.bg = ansiNamedColors[code - 10] ?? null;
+      continue;
+    }
+
+    if (code === 38 || code === 48) {
+      const isForeground = code === 38;
+      const mode = codes[index + 1];
+
+      if (mode === 5 && index + 2 < codes.length) {
+        const colorIndex = codes[index + 2];
+        if (!Number.isNaN(colorIndex)) {
+          state[isForeground ? 'fg' : 'bg'] = xtermColor(colorIndex);
+        }
+        index += 2;
+        continue;
+      }
+
+      if (mode === 2 && index + 4 < codes.length) {
+        const red = clampColor(codes[index + 2]);
+        const green = clampColor(codes[index + 3]);
+        const blue = clampColor(codes[index + 4]);
+        state[isForeground ? 'fg' : 'bg'] = `rgb(${red}, ${green}, ${blue})`;
+        index += 4;
+      }
+    }
+  }
+};
+
+const ansiStateToMarkup = (text, state) => {
+  const escaped = escapeHtml(text);
+  const classes = ['ansi-fragment'];
+  const styles = [];
+
+  if (state.bold) {
+    classes.push('ansi-bold');
+  }
+
+  if (state.dim) {
+    classes.push('ansi-dim');
+  }
+
+  if (state.italic) {
+    classes.push('ansi-italic');
+  }
+
+  if (state.underline) {
+    classes.push('ansi-underline');
+  }
+
+  const foreground = state.inverse ? (state.bg ?? 'var(--log-bg)') : state.fg;
+  const background = state.inverse ? (state.fg ?? 'var(--log-fg)') : state.bg;
+
+  if (foreground != null) {
+    styles.push(`color: ${foreground};`);
+  }
+
+  if (background != null) {
+    styles.push(`background-color: ${background};`);
+  }
+
+  if (classes.length === 1 && styles.length === 0) {
+    return escaped;
+  }
+
+  const classAttribute = classes.join(' ');
+  const styleAttribute = styles.length > 0 ? ` style="${styles.join(' ')}"` : '';
+  return `<span class="${classAttribute}"${styleAttribute}>${escaped}</span>`;
+};
+
+const renderAnsi = (value) => {
+  if (value.length === 0) {
+    return '';
+  }
+
+  let html = '';
+  let cursor = 0;
+  const state = defaultAnsiState();
+
+  for (const match of value.matchAll(ansiPattern)) {
+    const [sequence, rawCodes] = match;
+    const matchIndex = match.index ?? 0;
+
+    if (matchIndex > cursor) {
+      html += ansiStateToMarkup(value.slice(cursor, matchIndex), state);
+    }
+
+    const codes = rawCodes.length === 0
+      ? []
+      : rawCodes.split(';').map((code) => Number.parseInt(code, 10));
+
+    applyAnsiCodes(state, codes);
+    cursor = matchIndex + sequence.length;
+  }
+
+  if (cursor < value.length) {
+    html += ansiStateToMarkup(value.slice(cursor), state);
+  }
+
+  return html;
+};
 
 const serviceStateClass = (service) => {
   if (!service.running) {
@@ -204,7 +440,7 @@ const refreshLogs = async () => {
     ? `${payload.path} · ${payload.updatedAt ?? 'unknown update'}${payload.truncated ? ' · showing tail only' : ''}`
     : 'No log file found for this service yet.';
   logOutput.innerHTML = payload.exists
-    ? escapeHtml(payload.text || '(log file is empty)')
+    ? renderAnsi(payload.text || '(log file is empty)')
     : 'Log file not found.';
 };
 
