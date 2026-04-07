@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/reporting-aggregator-common.sh"
+
+reporting_aggregator_init
+
+if [ ! -d "$REPORTING_AGGREGATOR_HOME/node_modules" ]; then
+  "$LOCAL_HOME/scripts/npm-ci-reporting-aggregator.sh"
+fi
+
+if [ ! -f "$REPORTING_AGGREGATOR_ENTRYPOINT" ]; then
+  (
+    cd "$REPORTING_AGGREGATOR_HOME"
+    npm run build
+  )
+fi
+
+if [ -f "$REPORTING_AGGREGATOR_PID_FILE" ] && kill -0 "$(cat "$REPORTING_AGGREGATOR_PID_FILE")" 2>/dev/null; then
+  exit 0
+fi
+
+if pgrep -f "$REPORTING_AGGREGATOR_ENTRYPOINT" >/dev/null 2>&1; then
+    pgrep -f "$REPORTING_AGGREGATOR_ENTRYPOINT" | awk 'NR==1 {print $1}' > "$REPORTING_AGGREGATOR_PID_FILE" || true
+    exit 0
+fi
+
+: > "$REPORTING_AGGREGATOR_LOG_FILE"
+
+(
+  cd "$REPORTING_AGGREGATOR_HOME"
+  env \
+    LOG_LEVEL="$LOG_LEVEL" \
+    REPORTING_MYSQL_DB_HOST="$REPORTING_MYSQL_DB_HOST" \
+    REPORTING_MYSQL_DB_PORT="$REPORTING_MYSQL_DB_PORT" \
+    REPORTING_MYSQL_DB_USER="$REPORTING_MYSQL_DB_USER" \
+    REPORTING_MYSQL_DB_PASSWORD="$REPORTING_MYSQL_DB_PASSWORD" \
+    REPORTING_MYSQL_DB_SCHEMA="$REPORTING_MYSQL_DB_SCHEMA" \
+    REPORTING_MONGO_DB_HOST="$REPORTING_MONGO_DB_HOST" \
+    REPORTING_MONGO_DB_PORT="$REPORTING_MONGO_DB_PORT" \
+    REPORTING_MONGO_DB_USER="$REPORTING_MONGO_DB_USER" \
+    REPORTING_MONGO_DB_PASSWORD="$REPORTING_MONGO_DB_PASSWORD" \
+    REPORTING_MONGO_DB_DATABASE="$REPORTING_MONGO_DB_DATABASE" \
+    BATCH_SIZE="$BATCH_SIZE" \
+    TRANSFER_DETAILS_BATCH_SIZE="$TRANSFER_DETAILS_BATCH_SIZE" \
+    LOOP_TIMEOUT="$LOOP_TIMEOUT" \
+    MIN_BATCH_PERCENTAGE="$MIN_BATCH_PERCENTAGE" \
+    MAX_WAIT_COUNT="$MAX_WAIT_COUNT" \
+    setsid -f node "$REPORTING_AGGREGATOR_ENTRYPOINT" >>"$REPORTING_AGGREGATOR_LOG_FILE" 2>&1 < /dev/null
+)
+
+sleep 5
+
+if ! pgrep -f "$REPORTING_AGGREGATOR_ENTRYPOINT" >/dev/null 2>&1; then
+  echo "Reporting Aggregator did not stay running" >&2
+  exit 1
+fi
+
+pgrep -f "$REPORTING_AGGREGATOR_ENTRYPOINT" | awk 'NR==1 {print $1}' > "$REPORTING_AGGREGATOR_PID_FILE" || true
+echo "Reporting Aggregator started"

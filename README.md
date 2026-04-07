@@ -14,6 +14,8 @@ Tool prerequisites:
   - expected under `tools/jdk-21.0.10+7-jre`
 - Kafka binaries
   - expected under `tools/kafka_2.13-3.9.1`
+- Docker engine
+  - used by the optional managed MongoDB helper for `reporting-aggregator-svc`
 - Local runtime binaries for infra
   - expected under `runtime-root/usr/bin`
   - used for `mariadbd`, `mariadb-admin`, and `valkey-server`
@@ -48,6 +50,7 @@ Expected workspace layout:
   quoting-service/
   central-settlement/
   mtpa/                       # optional, only needed for wallet DFSP flows
+  reporting-aggregator-svc/         # optional, only needed for local reporting
   tools/
   runtime-root/
 ```
@@ -64,6 +67,10 @@ Additional sibling repo for the wallet DFSP flows in this README:
 
 - `mtpa`
 
+Additional optional repo:
+
+- `reporting-aggregator-svc`
+
 Example clone layout:
 
 ```bash
@@ -77,6 +84,7 @@ git clone --branch codex/mojaloop-local https://github.com/tw-sithumyo/ml-api-ad
 git clone https://github.com/mojaloop/quoting-service.git quoting-service
 git clone https://github.com/mojaloop/central-settlement.git central-settlement
 git clone --branch codex/mojaloop-local https://github.com/tw-sithumyo/mtpa.git mtpa
+git clone https://github.com/mojaloop/reporting-aggregator-svc.git reporting-aggregator-svc
 ```
 
 This directory contains a non-container bootstrap for a minimal Mojaloop core stack in that workspace.
@@ -99,19 +107,18 @@ Optional `wallet2` DFSP bootstrap and inter-DFSP test:
 8. `local/scripts/setup-wallet2.sh`
 9. `local/scripts/test-wallet1-wallet2-flow.sh`
 
-Stop commands:
+## Local UI
 
-- stop the local web UI: `local/scripts/stop-ui.sh`
-- stop core services: `local/scripts/stop-services.sh`
-- stop wallet-side MTPA services: `local/scripts/stop-wallet-services.sh`
-- stop infra: `local/scripts/stop-infra.sh`
-- stop everything: `local/scripts/stop-all.sh`
+Useful commands:
 
-Optional local UI:
+```bash
+local/scripts/start-ui.sh
+local/scripts/stop-ui.sh
+```
 
-- start: `local/scripts/start-ui.sh`
-- stop: `local/scripts/stop-ui.sh`
-- URL: `http://127.0.0.1:3400`
+URL:
+
+- `http://127.0.0.1:3400`
 
 The UI is read-only. It shows:
 
@@ -132,3 +139,57 @@ Current limitation:
 
 - `mtpa` outbound lookup currently requires `destination`, so the first-cut `wallet1` test flow is a directed lookup to `wallet1` rather than an oracle-driven party discovery flow
 - the `wallet1 -> wallet2` test flow is also a directed lookup, but it exercises a real cross-DFSP `lookup -> quote -> transfer` path with distinct parties
+
+## Reporting Aggregator
+
+The reporting stack is optional and separate from the main Mojaloop bootstrap.
+
+It consists of:
+
+- `reporting-aggregator-svc` as a host process
+- MariaDB from the existing local Mojaloop infra
+- MongoDB as the reporting target
+
+Useful commands:
+
+```bash
+local/scripts/npm-ci-reporting-aggregator.sh
+local/scripts/start-reporting-stack.sh
+local/scripts/status-reporting-stack.sh
+local/scripts/logs-reporting-aggregator.sh
+local/scripts/stop-reporting-stack.sh
+```
+
+Default config lives in `local/config/reporting-aggregator.env`.
+
+The scripts look for the service repo in:
+
+- `$REPORTING_AGGREGATOR_HOME`
+- `reporting-aggregator-svc`
+
+Default local wiring:
+
+- source MySQL: `127.0.0.1:3306`, schema `central_ledger`
+- target MongoDB: `127.0.0.1:27017`, database `reporting`
+
+Managed MongoDB:
+
+- set `REPORTING_MONGO_MANAGED=1` in `local/config/reporting-aggregator.env`
+- this makes `start-reporting-stack.sh` run a local MongoDB Docker container
+- if left at `0`, the scripts expect MongoDB to already be running elsewhere
+
+Service requirements:
+
+- hard requirement to start: MySQL plus MongoDB
+- meaningful transfer data: `central-ledger`, `quoting-service`, and actual transfer traffic
+- meaningful settlement data: settlement flows populating settlement tables
+- meaningful FX data: FX flows populating `fxTransfer*` and related tables
+
+## Stop Commands
+
+- stop the local web UI: `local/scripts/stop-ui.sh`
+- stop the reporting stack: `local/scripts/stop-reporting-stack.sh`
+- stop wallet-side MTPA services: `local/scripts/stop-wallet-services.sh`
+- stop core services: `local/scripts/stop-services.sh`
+- stop infra: `local/scripts/stop-infra.sh`
+- stop everything: `local/scripts/stop-all.sh`
