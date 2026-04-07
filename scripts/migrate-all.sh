@@ -9,3 +9,5 @@ for repo in central-ledger account-lookup-service; do
     npm run migrate
   )
 done
+
+"$LOCAL_HOME/scripts/seed-ledger-reference-data.sh"

@@ -46,13 +46,15 @@ quote_request="$(
       partyIdentifier: '$WALLET1_PARTY_ID',
       fspId: '$CONNECTOR_ID'
     };
-    process.stdout.write(JSON.stringify({
+    const request = {
       scenario: 'TRANSFER',
+      subScenario: process.env.QUOTE_SUB_SCENARIO?.trim() || undefined,
       amountType: 'SEND',
       amount: { amount: '10', currency: '$WALLET1_CURRENCY' },
       payer,
       payee
-    }));
+    };
+    process.stdout.write(JSON.stringify(request));
   "
 )"
 
