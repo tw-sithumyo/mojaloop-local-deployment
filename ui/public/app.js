@@ -19,7 +19,7 @@ const groupOrder = ['infra', 'core', 'wallet'];
 const groupTitles = {
   infra: 'Infrastructure',
   core: 'Core services',
-  wallet: 'Wallet and MTPA',
+  wallet: 'Wallet and Pivotal',
 };
 
 const escapeHtml = (value) => value

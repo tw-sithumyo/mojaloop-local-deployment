@@ -3,7 +3,7 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
 
-ENV_FILE="$CONF_DIR/wallet2-mtpa.env"
+ENV_FILE="$CONF_DIR/wallet2-pivotal.env"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "Missing wallet2 env file: $ENV_FILE" >&2

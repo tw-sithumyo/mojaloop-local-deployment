@@ -27,4 +27,5 @@ bind-address=127.0.0.1
 pid-file=$RUN_DIR/mysqld.pid
 log-error=$LOG_DIR/mariadb.err
 skip-networking=0
+max_connections=500
 EOF

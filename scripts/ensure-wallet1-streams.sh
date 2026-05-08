@@ -3,15 +3,15 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
 
-ENV_FILE="$CONF_DIR/wallet1-mtpa.env"
+ENV_FILE="$CONF_DIR/wallet1-pivotal.env"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "Missing wallet1 env file: $ENV_FILE" >&2
   exit 1
 fi
 
-if [ ! -d "$ROOT_DIR/mtpa/node_modules" ]; then
-  echo "Missing mtpa/node_modules. Run local/scripts/npm-ci-wallet1.sh first." >&2
+if [ ! -d "$PIVOTAL_HOME/node_modules" ]; then
+  echo "Missing pivotal/node_modules. Run local/scripts/npm-ci-pivotal.sh first." >&2
   exit 1
 fi
 
@@ -19,8 +19,8 @@ set -a
 source "$ENV_FILE"
 set +a
 
-ROOT_DIR="$ROOT_DIR" node - <<'NODE'
-const { connect } = require(`${process.env.ROOT_DIR}/mtpa/node_modules/nats`);
+PIVOTAL_HOME="$PIVOTAL_HOME" node - <<'NODE'
+const { connect } = require(`${process.env.PIVOTAL_HOME}/node_modules/nats`);
 
 const NO_STREAM_MATCHES_SUBJECT = 'no stream matches subject';
 const STREAM_ALREADY_EXISTS = 'stream name already in use';
@@ -33,12 +33,12 @@ const isExpectedError = (error, text) => {
 const streamDefinitions = [
   {
     lookupSubject: 'fspiop.wallet1.bootstrap',
-    name: process.env.PAYPORT_FSPIOP_STREAM_NAME || 'PAYPORT_FSPIOP',
+    name: process.env.PIVOTAL_FSPIOP_STREAM_NAME || 'PIVOTAL_FSPIOP',
     subjects: ['fspiop.>'],
   },
   {
     lookupSubject: 'audit.wallet1.bootstrap',
-    name: process.env.PAYPORT_AUDIT_STREAM_NAME || 'PAYPORT_AUDIT',
+    name: process.env.PIVOTAL_AUDIT_STREAM_NAME || 'PIVOTAL_AUDIT',
     subjects: ['audit.>'],
   },
 ];

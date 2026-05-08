@@ -3,7 +3,7 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
 
-ENV_FILE="$CONF_DIR/wallet2-mtpa.env"
+ENV_FILE="$CONF_DIR/wallet2-pivotal.env"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "Missing wallet2 env file: $ENV_FILE" >&2
@@ -11,13 +11,17 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 
 "$LOCAL_HOME/scripts/start-nats.sh"
-"$LOCAL_HOME/scripts/sync-wallet2-mtpa-env.sh"
+"$LOCAL_HOME/scripts/start-demowallet-services.sh" wallet2
+"$LOCAL_HOME/scripts/init-pivotal-db.sh"
+"$LOCAL_HOME/scripts/sync-wallet2-pivotal-env.sh"
 
-if [ ! -d "$ROOT_DIR/mtpa/node_modules" ]; then
-  "$LOCAL_HOME/scripts/npm-ci-wallet1.sh"
+if [ ! -d "$PIVOTAL_HOME/node_modules" ]; then
+  "$LOCAL_HOME/scripts/npm-ci-pivotal.sh"
 fi
 
 "$LOCAL_HOME/scripts/ensure-wallet2-streams.sh"
+"$LOCAL_HOME/scripts/start-pivotal-auditor.sh"
+"$LOCAL_HOME/scripts/seed-pivotal-participants.sh"
 
 start_service_with_port() {
   local name="$1"
@@ -36,7 +40,7 @@ start_service_with_port() {
   fi
 
   (
-    cd "$ROOT_DIR/mtpa"
+    cd "$PIVOTAL_HOME"
     : >"$LOG_DIR/$name.log"
     setsid -f npm run "$script_name" >"$LOG_DIR/$name.log" 2>&1 < /dev/null
   )
@@ -64,7 +68,7 @@ start_service_without_port() {
   fi
 
   (
-    cd "$ROOT_DIR/mtpa"
+    cd "$PIVOTAL_HOME"
     : >"$LOG_DIR/$name.log"
     setsid -f npm run "$script_name" >"$LOG_DIR/$name.log" 2>&1 < /dev/null
   )
@@ -81,4 +85,4 @@ start_service_without_port() {
 
 start_service_with_port wallet2-web-inbound 3201 start:apps-web-inbound '(apps-web-inbound|dist/packages/apps/web-inbound/main)'
 start_service_with_port wallet2-web-outbound 3200 start:apps-web-outbound '(apps-web-outbound|dist/packages/apps/web-outbound/main)'
-start_service_without_port wallet2-connector start:samples-wallet2-connector '(samples-wallet2-connector|dist/packages/samples/wallet2-connector/main)'
+"$LOCAL_HOME/scripts/start-pivotal-connector-services.sh" wallet2

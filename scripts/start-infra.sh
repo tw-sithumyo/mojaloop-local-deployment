@@ -30,6 +30,9 @@ if ! [ -f "$RUN_DIR/mysqld.pid" ] || ! kill -0 "$(cat "$RUN_DIR/mysqld.pid")" 2>
   done
 fi
 
+"$RUNTIME_ROOT/usr/bin/mariadb" -h 127.0.0.1 -P 3306 -u root \
+  -e "SET GLOBAL max_connections=500;" >/dev/null
+
 cat > "$CONF_DIR/kafka.properties" <<EOF
 process.roles=broker,controller
 node.id=1
