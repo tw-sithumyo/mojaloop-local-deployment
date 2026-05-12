@@ -4,6 +4,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/stop-common.sh"
 
 "$LOCAL_HOME/scripts/stop-pivotal-connector-services.sh" || true
+"$LOCAL_HOME/scripts/stop-pivotal-portal-services.sh" || true
 "$LOCAL_HOME/scripts/stop-pivotal-auditor.sh" || true
 stop_named_process wallet1-connector "$RUN_DIR/wallet1-connector.pid" "" '(samples-wallet1-connector|dist/packages/samples/wallet1-connector/main)'
 stop_named_process wallet2-connector "$RUN_DIR/wallet2-connector.pid" "" '(samples-wallet2-connector|dist/packages/samples/wallet2-connector/main)'

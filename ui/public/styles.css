@@ -341,6 +341,65 @@ body {
   white-space: pre-wrap;
 }
 
+.ansi-bold,
+.log-level {
+  font-weight: 700;
+}
+
+.ansi-dim {
+  opacity: 0.72;
+}
+
+.ansi-fg-black {
+  color: #7f8f83;
+}
+
+.ansi-fg-red,
+.ansi-fg-bright-red,
+.log-level-error {
+  color: #ff6b6b;
+}
+
+.ansi-fg-green,
+.ansi-fg-bright-green,
+.log-level-info,
+.log-level-log {
+  color: #78d98c;
+}
+
+.ansi-fg-yellow,
+.ansi-fg-bright-yellow,
+.log-level-warn {
+  color: #f7c56b;
+}
+
+.ansi-fg-blue,
+.ansi-fg-bright-blue,
+.log-level-debug {
+  color: #82b7ff;
+}
+
+.ansi-fg-magenta,
+.ansi-fg-bright-magenta,
+.log-level-audit {
+  color: #d89aff;
+}
+
+.ansi-fg-cyan,
+.ansi-fg-bright-cyan,
+.log-level-trace {
+  color: #70d7e8;
+}
+
+.ansi-fg-white,
+.ansi-fg-bright-white {
+  color: #f4f7f2;
+}
+
+.ansi-fg-bright-black {
+  color: #9ca8a0;
+}
+
 @media (max-width: 1024px) {
   .summary,
   .board {

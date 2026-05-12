@@ -22,6 +22,7 @@ fi
 "$LOCAL_HOME/scripts/ensure-wallet1-streams.sh"
 "$LOCAL_HOME/scripts/start-pivotal-auditor.sh"
 "$LOCAL_HOME/scripts/seed-pivotal-participants.sh"
+"$LOCAL_HOME/scripts/start-pivotal-portal-services.sh"
 
 start_service_with_port() {
   local name="$1"

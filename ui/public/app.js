@@ -27,6 +27,94 @@ const escapeHtml = (value) => value
   .replaceAll('<', '&lt;')
   .replaceAll('>', '&gt;');
 
+const ansiFgClasses = new Map([
+  [30, 'ansi-fg-black'],
+  [31, 'ansi-fg-red'],
+  [32, 'ansi-fg-green'],
+  [33, 'ansi-fg-yellow'],
+  [34, 'ansi-fg-blue'],
+  [35, 'ansi-fg-magenta'],
+  [36, 'ansi-fg-cyan'],
+  [37, 'ansi-fg-white'],
+  [90, 'ansi-fg-bright-black'],
+  [91, 'ansi-fg-bright-red'],
+  [92, 'ansi-fg-bright-green'],
+  [93, 'ansi-fg-bright-yellow'],
+  [94, 'ansi-fg-bright-blue'],
+  [95, 'ansi-fg-bright-magenta'],
+  [96, 'ansi-fg-bright-cyan'],
+  [97, 'ansi-fg-bright-white'],
+]);
+
+const highlightLogLevels = (value) => value.replace(
+  /\b(error|err|warn|warning|info|log|debug|audit|trace)\b/gi,
+  (match) => {
+    const normalized = match.toLowerCase();
+    const level = normalized === 'warning' ? 'warn' : normalized === 'err' ? 'error' : normalized;
+    return `<span class="log-level log-level-${level}">${match}</span>`;
+  },
+);
+
+const ansiStateClasses = ({ fgClass, bold, dim }) => [
+  fgClass,
+  bold ? 'ansi-bold' : null,
+  dim ? 'ansi-dim' : null,
+].filter(Boolean);
+
+const ansiToHtml = (value) => {
+  const ansiPattern = /\x1b\[([0-9;]*)m/g;
+  const state = {
+    fgClass: null,
+    bold: false,
+    dim: false,
+  };
+  let cursor = 0;
+  let html = '';
+  let match;
+
+  const renderSegment = (text) => {
+    if (text.length === 0) {
+      return '';
+    }
+
+    const escaped = highlightLogLevels(escapeHtml(text));
+    const classes = ansiStateClasses(state);
+    return classes.length === 0
+      ? escaped
+      : `<span class="${classes.join(' ')}">${escaped}</span>`;
+  };
+
+  const applyAnsiCodes = (codes) => {
+    for (const code of codes) {
+      if (code === 0) {
+        state.fgClass = null;
+        state.bold = false;
+        state.dim = false;
+      } else if (code === 1) {
+        state.bold = true;
+      } else if (code === 2) {
+        state.dim = true;
+      } else if (code === 22) {
+        state.bold = false;
+        state.dim = false;
+      } else if (code === 39) {
+        state.fgClass = null;
+      } else if (ansiFgClasses.has(code)) {
+        state.fgClass = ansiFgClasses.get(code);
+      }
+    }
+  };
+
+  while ((match = ansiPattern.exec(value)) !== null) {
+    html += renderSegment(value.slice(cursor, match.index));
+    applyAnsiCodes(match[1] === '' ? [0] : match[1].split(';').map(Number));
+    cursor = ansiPattern.lastIndex;
+  }
+
+  html += renderSegment(value.slice(cursor));
+  return html;
+};
+
 const serviceStateClass = (service) => {
   if (!service.running) {
     return 'error';
@@ -204,7 +292,7 @@ const refreshLogs = async () => {
     ? `${payload.path} · ${payload.updatedAt ?? 'unknown update'}${payload.truncated ? ' · showing tail only' : ''}`
     : 'No log file found for this service yet.';
   logOutput.innerHTML = payload.exists
-    ? escapeHtml(payload.text || '(log file is empty)')
+    ? ansiToHtml(payload.text || '(log file is empty)')
     : 'Log file not found.';
 };
 

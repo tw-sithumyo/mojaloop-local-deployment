@@ -59,7 +59,7 @@ need_port() {
 
   if ! ss -ltn | rg -q "[:.]$port\\b"; then
     echo "$name is not listening on port $port" >&2
-    echo "Run local/scripts/start-services.sh plus wallet setup/start scripts before this repro." >&2
+    echo "Run local/scripts/start-mojaloop-core-services.sh plus wallet setup/start scripts before this repro." >&2
     exit 1
   fi
 }

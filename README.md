@@ -100,13 +100,39 @@ git clone https://github.com/mojaloop/reporting-aggregator-svc.git reporting-agg
 
 This directory contains a non-container bootstrap for a minimal Mojaloop core stack in that workspace.
 
+Interactive start for the local stack:
+
+```bash
+local/scripts/start-all.sh
+```
+
+Start the normal full stack without the checklist:
+
+```bash
+local/scripts/start-all.sh --all
+```
+
+This starts infra, Mojaloop core services, wallet1, wallet2, Pivotal portal API/UI, and the local monitor UI. Optional stacks are off by default:
+
+```bash
+START_ALL_REPORTING=1 START_ALL_TAZAMA=1 START_ALL_PPA=1 local/scripts/start-all.sh
+```
+
+Useful flags:
+
+- `START_ALL_NPM_CI=auto|always|skip`
+- `START_ALL_SELECT=0` starts the normal full stack without the checklist
+- `START_ALL_MIGRATE=0` skips migrations
+- `START_ALL_UI=0` skips the local monitor UI
+- `START_ALL_COMPONENTS=infra,migrations,core,wallet1,wallet2` runs an explicit subset without the checklist
+
 Order:
 
 1. `source local/env.sh`
 2. `local/scripts/start-infra.sh`
 3. `local/scripts/npm-ci-all.sh`
 4. `local/scripts/migrate-all.sh`
-5. `local/scripts/start-services.sh`
+5. `local/scripts/start-mojaloop-core-services.sh`
 
 Optional `wallet1` DFSP bootstrap with `pivotal-new`, `pivotal-connector-nestjs`, and `Mojaloop-DemoWallet`:
 
@@ -125,7 +151,7 @@ callback after Central Ledger has already produced the prepare notification.
 
 Required services:
 
-- core services from `local/scripts/start-services.sh`
+- core services from `local/scripts/start-mojaloop-core-services.sh`
 - wallet services from `local/scripts/setup-wallet1.sh` and `local/scripts/setup-wallet2.sh`
 
 Run:
@@ -187,6 +213,8 @@ The wallet flow is intentionally minimal for now:
 
 - it uses `pivotal-new` as the DFSP app layer
 - it runs Pivotal app-auditor so the `pivotal` schema is migrated and audit events are consumed
+- it runs Pivotal portal API on `127.0.0.1:3202`
+- it runs Pivotal portal UI on `127.0.0.1:4173`
 - it runs `pivotal-connector-nestjs` as the wallet connector process
 - it runs `Mojaloop-DemoWallet` as the local wallet backend
 - it initializes the local Pivotal MySQL schema and `pivotal/password` user
@@ -252,6 +280,7 @@ Service requirements:
 
 - stop the local web UI: `local/scripts/stop-ui.sh`
 - stop the reporting stack: `local/scripts/stop-reporting-stack.sh`
+- stop Pivotal portal API/UI: `local/scripts/stop-pivotal-portal-services.sh`
 - stop wallet-side Pivotal services: `local/scripts/stop-wallet-services.sh`
 - stop core services: `local/scripts/stop-services.sh`
 - stop infra: `local/scripts/stop-infra.sh`

@@ -148,6 +148,23 @@ const serviceDefinitions = [
         logFiles: ['pivotal-app-auditor.log'],
     },
     {
+        id: 'pivotal-web-pivotal',
+        name: 'Pivotal Portal API',
+        group: 'wallet',
+        pidFiles: ['pivotal-web-pivotal.pid'],
+        port: 3202,
+        logFiles: ['pivotal-web-pivotal.log'],
+    },
+    {
+        id: 'pivotal-portal',
+        name: 'Pivotal Portal UI',
+        group: 'wallet',
+        pidFiles: ['pivotal-portal.pid'],
+        port: 4173,
+        healthUrl: 'http://127.0.0.1:4173/',
+        logFiles: ['pivotal-portal.log'],
+    },
+    {
         id: 'pivotal-web-inbound',
         name: 'Pivotal Web Inbound',
         group: 'wallet',
