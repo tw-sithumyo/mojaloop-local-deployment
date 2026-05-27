@@ -62,6 +62,7 @@ if [ ! -f "$DATA_DIR/kafka-logs/meta.properties" ]; then
 fi
 
 if ! [ -f "$RUN_DIR/kafka.pid" ] || ! kill -0 "$(cat "$RUN_DIR/kafka.pid")" 2>/dev/null; then
+  export KAFKA_HEAP_OPTS="${KAFKA_HEAP_OPTS:--Xms256M -Xmx512M}"
   setsid -f "$KAFKA_HOME/bin/kafka-server-start.sh" "$CONF_DIR/kafka.properties" >"$LOG_DIR/kafka.log" 2>&1 < /dev/null
   for _ in $(seq 1 60); do
     if "$KAFKA_HOME/bin/kafka-topics.sh" --bootstrap-server 127.0.0.1:9092 --list >/dev/null 2>&1; then
