@@ -204,6 +204,15 @@ const serviceDefinitions = [
         healthUrl: 'http://127.0.0.1:8082/public/heart_beat',
         logFiles: ['wallet2-demowallet.log'],
     },
+    {
+        id: 'operation-portal',
+        name: 'Operation Portal API',
+        group: 'optional',
+        pidFiles: ['operation-portal.pid'],
+        port: 8003,
+        healthUrl: 'http://127.0.0.1:8003/actuator/health',
+        logFiles: ['operation-portal.log'],
+    },
 ];
 
 const serviceMap = new Map(serviceDefinitions.map((service) => [service.id, service]));

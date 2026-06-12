@@ -4,6 +4,7 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
 
 "$LOCAL_HOME/scripts/stop-ui.sh"
+"$LOCAL_HOME/scripts/stop-operation-portal.sh" || true
 "$LOCAL_HOME/scripts/stop-reporting-stack.sh" || true
 "$LOCAL_HOME/scripts/stop-ppa.sh" || true
 "$LOCAL_HOME/scripts/stop-tazama.sh" || true

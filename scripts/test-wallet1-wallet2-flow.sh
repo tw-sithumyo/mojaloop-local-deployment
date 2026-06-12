@@ -36,6 +36,7 @@ WALLET2_PARTY_ID_VALUE="$WALLET2_PARTY_ID"
 
 AUTH_HEADER='Bearer a.b.c'
 OUTBOUND_BASE="http://127.0.0.1:${WALLET1_OUTBOUND_PORT}"
+TRANSFER_AMOUNT="${TRANSFER_AMOUNT:-10}"
 
 post_json() {
   local path="$1"
@@ -81,7 +82,7 @@ sendmoney_request="$(
         fspId: '$WALLET2_CONNECTOR_ID'
       },
       amountType: 'SEND',
-      amount: '10',
+      amount: '$TRANSFER_AMOUNT',
       currency: '$WALLET1_CURRENCY_VALUE',
       transactionType: 'TRANSFER',
       subScenario: process.env.QUOTE_SUB_SCENARIO?.trim() || 'PERSON_TO_PERSON',
@@ -93,7 +94,7 @@ sendmoney_request="$(
 
 party_response="$(post_json "/secured/sendmoney" "$sendmoney_request")"
 transfer_id="$(echo "$party_response" | "$NODE_HOME/bin/node" -e "const data = JSON.parse(require('fs').readFileSync(0, 'utf8')); process.stdout.write(data.transferId);")"
-quote_response="$(put_json "/secured/sendmoney/$transfer_id" '{"acceptParty":true}')"
+quote_response="$(put_json "/secured/sendmoney/$transfer_id" "{\"acceptParty\":true,\"amount\":\"$TRANSFER_AMOUNT\"}")"
 transfer_response="$(put_json "/secured/sendmoney/$transfer_id" '{"acceptQuote":true}')"
 
 node -e "

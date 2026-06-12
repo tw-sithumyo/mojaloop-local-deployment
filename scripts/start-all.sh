@@ -9,6 +9,7 @@ START_ALL_NPM_CI="${START_ALL_NPM_CI:-auto}"
 START_ALL_MIGRATE="${START_ALL_MIGRATE:-1}"
 START_ALL_UI="${START_ALL_UI:-1}"
 START_ALL_REPORTING="${START_ALL_REPORTING:-0}"
+START_ALL_OPERATION_PORTAL="${START_ALL_OPERATION_PORTAL:-0}"
 START_ALL_TAZAMA="${START_ALL_TAZAMA:-0}"
 START_ALL_PPA="${START_ALL_PPA:-0}"
 
@@ -30,6 +31,7 @@ Environment:
   START_ALL_MIGRATE=0
   START_ALL_UI=0
   START_ALL_REPORTING=1
+  START_ALL_OPERATION_PORTAL=1
   START_ALL_TAZAMA=1
   START_ALL_PPA=1
 
@@ -42,6 +44,7 @@ Components:
   wallet2     wallet2 DemoWallet, Pivotal apps, connector, onboarding
   ui          Local monitor UI
   reporting   Optional reporting stack
+  operation-portal Optional Operation Portal API
   tazama      Optional Tazama service
   ppa         Optional payment platform adapter
 EOF
@@ -133,6 +136,9 @@ default_components() {
   if [ "$START_ALL_REPORTING" = "1" ]; then
     components+=(reporting)
   fi
+  if [ "$START_ALL_OPERATION_PORTAL" = "1" ]; then
+    components+=(operation-portal)
+  fi
   if [ "$START_ALL_TAZAMA" = "1" ]; then
     components+=(tazama)
   fi
@@ -148,11 +154,13 @@ choose_components() {
   local migrations_state="ON"
   local ui_state="ON"
   local reporting_state="OFF"
+  local operation_portal_state="OFF"
   local tazama_state="OFF"
   local ppa_state="OFF"
   local dialog_migrations_state="on"
   local dialog_ui_state="on"
   local dialog_reporting_state="off"
+  local dialog_operation_portal_state="off"
   local dialog_tazama_state="off"
   local dialog_ppa_state="off"
 
@@ -167,6 +175,10 @@ choose_components() {
   if [ "$START_ALL_REPORTING" = "1" ]; then
     reporting_state="ON"
     dialog_reporting_state="on"
+  fi
+  if [ "$START_ALL_OPERATION_PORTAL" = "1" ]; then
+    operation_portal_state="ON"
+    dialog_operation_portal_state="on"
   fi
   if [ "$START_ALL_TAZAMA" = "1" ]; then
     tazama_state="ON"
@@ -191,6 +203,7 @@ choose_components() {
         wallet2 "wallet2 DemoWallet + Pivotal + connector + onboarding" ON \
         ui "Local monitor UI" "$ui_state" \
         reporting "Optional reporting stack" "$reporting_state" \
+        operation-portal "Optional Operation Portal API" "$operation_portal_state" \
         tazama "Optional Tazama service" "$tazama_state" \
         ppa "Optional payment platform adapter" "$ppa_state" \
         3>&1 1>&2 2>&3
@@ -212,6 +225,7 @@ choose_components() {
         wallet2 "wallet2 DemoWallet + Pivotal + connector + onboarding" on \
         ui "Local monitor UI" "$dialog_ui_state" \
         reporting "Optional reporting stack" "$dialog_reporting_state" \
+        operation-portal "Optional Operation Portal API" "$dialog_operation_portal_state" \
         tazama "Optional Tazama service" "$dialog_tazama_state" \
         ppa "Optional payment platform adapter" "$dialog_ppa_state" \
         3>&1 1>&2 2>&3
@@ -240,7 +254,7 @@ normalize_components() {
 
   for item in $raw; do
     case "$item" in
-      infra|deps|migrations|core|wallet1|wallet2|ui|reporting|tazama|ppa)
+      infra|deps|migrations|core|wallet1|wallet2|ui|reporting|operation-portal|tazama|ppa)
         SELECTED_COMPONENTS+=("$item")
         ;;
       "")
@@ -320,6 +334,10 @@ if component_enabled reporting; then
   step "$LOCAL_HOME/scripts/start-reporting-stack.sh"
 fi
 
+if component_enabled operation-portal; then
+  step "$LOCAL_HOME/scripts/start-operation-portal.sh"
+fi
+
 if component_enabled tazama; then
   step "$LOCAL_HOME/scripts/start-tazama.sh"
 fi
@@ -346,4 +364,7 @@ Pivotal:
 
 Local monitor:
 - http://127.0.0.1:${LOCAL_UI_PORT:-3400}
+
+Operation Portal:
+- API: http://127.0.0.1:${OPERATION_PORTAL_PORT:-8003}
 EOF
