@@ -12,6 +12,42 @@
   --error: #9e2b25;
   --error-soft: rgba(158, 43, 37, 0.12);
   --shadow: 0 18px 40px rgba(52, 44, 22, 0.14);
+  --viewport-gradient:
+    radial-gradient(circle at 8% 4%, rgba(29, 107, 82, 0.28), transparent 24rem),
+    radial-gradient(circle at 92% 8%, rgba(181, 122, 0, 0.24), transparent 22rem),
+    radial-gradient(circle at 50% 110%, rgba(68, 95, 63, 0.18), transparent 30rem),
+    linear-gradient(135deg, #fff8ea 0%, #f2ead8 45%, #e8ddc4 100%);
+  --action-bg: linear-gradient(135deg, #1d6b52 0%, #18473a 100%);
+  --action-shadow: 0 12px 22px rgba(24, 71, 58, 0.25);
+  --log-bg: #101713;
+  --log-ink: #e7f4ea;
+  --log-border: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="dark"] {
+  --bg: #07100d;
+  --panel: rgba(13, 24, 19, 0.82);
+  --panel-strong: rgba(17, 31, 25, 0.92);
+  --ink: #edf6ee;
+  --muted: #a8b8ad;
+  --line: rgba(223, 240, 225, 0.12);
+  --accent: #74d8a5;
+  --accent-soft: rgba(116, 216, 165, 0.14);
+  --warn: #f2c266;
+  --warn-soft: rgba(242, 194, 102, 0.14);
+  --error: #ff8179;
+  --error-soft: rgba(255, 129, 121, 0.14);
+  --shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
+  --viewport-gradient:
+    radial-gradient(circle at 12% 0%, rgba(80, 206, 149, 0.26), transparent 24rem),
+    radial-gradient(circle at 88% 8%, rgba(242, 194, 102, 0.18), transparent 23rem),
+    radial-gradient(circle at 50% 115%, rgba(41, 91, 76, 0.5), transparent 32rem),
+    linear-gradient(135deg, #07100d 0%, #102018 44%, #1d271c 100%);
+  --action-bg: linear-gradient(135deg, #4ecb91 0%, #1d6b52 100%);
+  --action-shadow: 0 12px 22px rgba(24, 71, 58, 0.45);
+  --log-bg: #050807;
+  --log-ink: #e8f8ee;
+  --log-border: rgba(232, 248, 238, 0.08);
 }
 
 * {
@@ -22,14 +58,23 @@ body {
   margin: 0;
   min-height: 100vh;
   color: var(--ink);
-  background:
-    radial-gradient(circle at top left, rgba(29, 107, 82, 0.18), transparent 22rem),
-    radial-gradient(circle at top right, rgba(181, 122, 0, 0.14), transparent 18rem),
-    linear-gradient(180deg, #f8f2e7 0%, var(--bg) 100%);
+  background: var(--bg);
   font-family: "Avenir Next", "Segoe UI", sans-serif;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--viewport-gradient);
 }
 
 .shell {
+  position: relative;
+  z-index: 1;
   width: min(1740px, calc(100vw - 0.5rem));
   margin: 0 auto;
   padding: 1.25rem 0 2rem;
@@ -98,8 +143,15 @@ body {
   border-radius: 999px;
   cursor: pointer;
   color: #f8f6f0;
-  background: linear-gradient(135deg, #1d6b52 0%, #18473a 100%);
-  box-shadow: 0 12px 22px rgba(24, 71, 58, 0.25);
+  background: var(--action-bg);
+  box-shadow: var(--action-shadow);
+}
+
+.action.secondary {
+  color: var(--ink);
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  box-shadow: none;
 }
 
 .stamp,
@@ -249,14 +301,48 @@ body {
   color: var(--muted);
 }
 
-.group-header h3 {
+.group-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.7rem;
+  align-items: center;
+  width: 100%;
   margin: 0 0 0.7rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.95rem;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.group-title {
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.group-meta,
+.group-caret {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.group-caret {
+  min-width: 3.2rem;
+  text-align: right;
 }
 
 .service-grid {
   display: grid;
   gap: 0.75rem;
+}
+
+.service-grid.collapsed {
+  display: none;
 }
 
 .service-card {
@@ -266,6 +352,7 @@ body {
   border-radius: 1rem;
   border: 1px solid var(--line);
   background: var(--panel-strong);
+  color: var(--ink);
   cursor: pointer;
   transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
 }
@@ -332,9 +419,9 @@ body {
   max-height: 70vh;
   overflow: auto;
   border-radius: 1rem;
-  background: #101713;
-  color: #e7f4ea;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--log-bg);
+  color: var(--log-ink);
+  border: 1px solid var(--log-border);
   font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
   font-size: 0.88rem;
   line-height: 1.5;

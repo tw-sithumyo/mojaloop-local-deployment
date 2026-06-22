@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Mojaloop Local UI</title>
+    <script>
+      document.documentElement.dataset.theme = localStorage.getItem('local-monitor-theme') || 'dark';
+    </script>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body>
@@ -17,6 +20,7 @@
         </p>
         <div class="hero-actions">
           <button id="refreshButton" class="action">Refresh now</button>
+          <button id="themeToggle" class="action secondary" type="button" aria-pressed="true">Light mode</button>
           <span id="lastUpdated" class="stamp">Waiting for first update</span>
         </div>
       </section>

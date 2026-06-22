@@ -8,19 +8,35 @@ const logTitle = document.querySelector('#logTitle');
 const logMeta = document.querySelector('#logMeta');
 const logOutput = document.querySelector('#logOutput');
 const lineCount = document.querySelector('#lineCount');
+const themeToggle = document.querySelector('#themeToggle');
+const themeStorageKey = 'local-monitor-theme';
 
 const state = {
   services: [],
   selectedServiceId: null,
   searchTerm: '',
+  collapsedGroups: new Set(['core', 'wallet', 'infra']),
 };
 
-const groupOrder = ['infra', 'core', 'wallet'];
+const groupOrder = ['wallet', 'core', 'infra'];
 const groupTitles = {
   infra: 'Infrastructure',
   core: 'Core services',
   wallet: 'Wallet and Pivotal',
 };
+
+const setTheme = (theme) => {
+  const normalizedTheme = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = normalizedTheme;
+  localStorage.setItem(themeStorageKey, normalizedTheme);
+
+  if (themeToggle != null) {
+    themeToggle.textContent = normalizedTheme === 'dark' ? 'Light mode' : 'Dark mode';
+    themeToggle.setAttribute('aria-pressed', String(normalizedTheme === 'dark'));
+  }
+};
+
+setTheme(localStorage.getItem(themeStorageKey) || document.documentElement.dataset.theme || 'dark');
 
 const escapeHtml = (value) => value
   .replaceAll('&', '&amp;')
@@ -186,13 +202,14 @@ const renderSummary = (totals) => {
 const renderServices = () => {
   const grouped = new Map(groupOrder.map((group) => [group, []]));
   const visibleServices = filteredServices();
+  const searchActive = state.searchTerm.trim().length > 0;
 
   for (const service of visibleServices) {
     grouped.get(service.group)?.push(service);
   }
 
   const visibleCount = visibleServices.length;
-  serviceFilterMeta.textContent = state.searchTerm.trim().length === 0
+  serviceFilterMeta.textContent = !searchActive
     ? `Showing all ${state.services.length} services.`
     : `Showing ${visibleCount} of ${state.services.length} services for "${state.searchTerm.trim()}".`;
 
@@ -202,12 +219,19 @@ const renderServices = () => {
       return '';
     }
 
+    const collapsed = !searchActive && state.collapsedGroups.has(group);
+    const serviceCountLabel = `${services.length} service${services.length === 1 ? '' : 's'}`;
+
     return `
       <section class="service-group">
         <header class="group-header">
-          <h3>${groupTitles[group] ?? group}</h3>
+          <button class="group-toggle" type="button" data-group-id="${group}" aria-expanded="${!collapsed}">
+            <span class="group-title">${groupTitles[group] ?? group}</span>
+            <span class="group-meta">${searchActive ? 'Expanded by search' : serviceCountLabel}</span>
+            <span class="group-caret" aria-hidden="true">${collapsed ? 'Show' : 'Hide'}</span>
+          </button>
         </header>
-        <div class="service-grid">
+        <div class="service-grid${collapsed ? ' collapsed' : ''}">
           ${services.map((service) => {
             const tone = serviceStateClass(service);
             const selected = service.id === state.selectedServiceId ? ' selected' : '';
@@ -246,6 +270,23 @@ const renderServices = () => {
       state.selectedServiceId = button.dataset.serviceId;
       renderServices();
       void refreshLogs();
+    });
+  }
+
+  for (const button of servicesRoot.querySelectorAll('[data-group-id]')) {
+    button.addEventListener('click', () => {
+      const group = button.dataset.groupId;
+      if (group == null || searchActive) {
+        return;
+      }
+
+      if (state.collapsedGroups.has(group)) {
+        state.collapsedGroups.delete(group);
+      } else {
+        state.collapsedGroups.add(group);
+      }
+
+      renderServices();
     });
   }
 };
@@ -308,6 +349,10 @@ const refreshAll = async () => {
 
 refreshButton.addEventListener('click', () => {
   void refreshAll();
+});
+
+themeToggle?.addEventListener('click', () => {
+  setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
 });
 
 lineCount.addEventListener('change', () => {

@@ -21,6 +21,8 @@ stop_named_process \
   "$PIVOTAL_PORTAL_PORT" \
   "(vite.*${PIVOTAL_PORTAL_PORT}|packages/portal)"
 
+"$LOCAL_HOME/scripts/stop-pivotal-report-worker.sh"
+
 stop_named_process \
   pivotal-web-pivotal \
   "$RUN_DIR/pivotal-web-pivotal.pid" \

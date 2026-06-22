@@ -148,6 +148,13 @@ const serviceDefinitions = [
         logFiles: ['pivotal-app-auditor.log'],
     },
     {
+        id: 'pivotal-report-worker',
+        name: 'Pivotal Report Worker',
+        group: 'wallet',
+        pidFiles: ['pivotal-report-worker.pid'],
+        logFiles: ['pivotal-report-worker.log'],
+    },
+    {
         id: 'pivotal-web-pivotal',
         name: 'Pivotal Portal API',
         group: 'wallet',

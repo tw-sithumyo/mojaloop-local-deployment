@@ -102,6 +102,8 @@ start_service_with_port \
   '(apps-web-pivotal|dist/packages/apps/web-pivotal/main)' \
   npm run start:apps-web-pivotal
 
+"$LOCAL_HOME/scripts/start-pivotal-report-worker.sh"
+
 start_service_with_port \
   pivotal-portal \
   "$PIVOTAL_HOME/packages/portal" \
