@@ -59,9 +59,9 @@ const main = async () => {
         `INSERT INTO participant (name, jws_public_key, jws_private_key, access_public_key)
          VALUES (?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
-           jws_public_key = VALUES(jws_public_key),
-           jws_private_key = VALUES(jws_private_key),
-           access_public_key = VALUES(access_public_key)`,
+           jws_public_key = IF(jws_public_key IS NULL OR jws_public_key = '', VALUES(jws_public_key), jws_public_key),
+           jws_private_key = IF(jws_private_key IS NULL OR jws_private_key = '', VALUES(jws_private_key), jws_private_key),
+           access_public_key = IF(access_public_key IS NULL OR access_public_key = '', VALUES(access_public_key), access_public_key)`,
         [name, publicPem, privatePem, publicPem],
       );
     }
