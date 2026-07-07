@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 NATS_VERSION="2.12.5"
 NATS_ARCHIVE="nats-server-v${NATS_VERSION}-linux-amd64.tar.gz"
@@ -19,11 +20,13 @@ if [ ! -x "$NATS_BIN" ]; then
 fi
 
 if [ -f "$RUN_DIR/nats.pid" ] && kill -0 "$(cat "$RUN_DIR/nats.pid")" 2>/dev/null; then
+  print_local_nats_endpoints
   exit 0
 fi
 
 if ss -ltn | rg -q '[:.]4222\b'; then
   pgrep -af "$NATS_BIN" | awk 'NR==1 {print $1}' > "$RUN_DIR/nats.pid" || true
+  print_local_nats_endpoints
   exit 0
 fi
 
@@ -40,6 +43,7 @@ setsid -f "$NATS_BIN" \
 for _ in $(seq 1 30); do
   if curl -fsS http://127.0.0.1:8222/healthz >/dev/null 2>&1; then
     pgrep -af "$NATS_BIN" | awk 'NR==1 {print $1}' > "$RUN_DIR/nats.pid" || true
+    print_local_nats_endpoints
     exit 0
   fi
   sleep 1

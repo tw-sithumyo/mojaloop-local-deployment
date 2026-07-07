@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/operation-portal-common.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 operation_portal_init
 
@@ -29,6 +30,7 @@ fi
 
 if [ -f "$OPERATION_PORTAL_PID_FILE" ] && kill -0 "$(cat "$OPERATION_PORTAL_PID_FILE")" 2>/dev/null; then
   echo "operation-portal: already running pid $(cat "$OPERATION_PORTAL_PID_FILE")"
+  print_local_operation_portal_endpoints
   exit 0
 fi
 
@@ -57,7 +59,7 @@ for _ in $(seq 1 60); do
   fi
 
   if curl -fsS --max-time 2 "http://127.0.0.1:$OPERATION_PORTAL_PORT/actuator/health" >/dev/null 2>&1; then
-    echo "operation-portal: http://127.0.0.1:$OPERATION_PORTAL_PORT"
+    print_local_operation_portal_endpoints
     exit 0
   fi
   sleep 1

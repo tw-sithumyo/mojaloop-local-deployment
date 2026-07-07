@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 "$LOCAL_HOME/scripts/init-mariadb.sh"
 mkdir -p "$DATA_DIR/kafka-logs" "$DATA_DIR/valkey"
@@ -75,3 +76,4 @@ fi
 
 "$LOCAL_HOME/scripts/provision-mojaloop.sql.sh"
 "$LOCAL_HOME/scripts/provision-kafka-topics.sh"
+print_local_infra_endpoints

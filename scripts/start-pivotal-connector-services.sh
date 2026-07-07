@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 TARGET="${1:-all}"
 
@@ -101,12 +102,16 @@ case "$TARGET" in
   all)
     start_connector wallet1 "http://127.0.0.1:8081"
     start_connector wallet2 "http://127.0.0.1:8082"
+    print_local_connector_endpoint wallet1
+    print_local_connector_endpoint wallet2
     ;;
   wallet1)
     start_connector wallet1 "http://127.0.0.1:8081"
+    print_local_connector_endpoint wallet1
     ;;
   wallet2)
     start_connector wallet2 "http://127.0.0.1:8082"
+    print_local_connector_endpoint wallet2
     ;;
   *)
     echo "Usage: $0 [all|wallet1|wallet2]" >&2

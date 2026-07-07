@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 TARGET="${1:-all}"
 APP_DIR="$DEMOWALLET_HOME/implementation/web_demowallet_api/target"
@@ -71,12 +72,16 @@ case "$TARGET" in
   all)
     start_demowallet wallet1 8081 wallet1
     start_demowallet wallet2 8082 wallet2
+    print_local_demowallet_endpoint wallet1
+    print_local_demowallet_endpoint wallet2
     ;;
   wallet1)
     start_demowallet wallet1 8081 wallet1
+    print_local_demowallet_endpoint wallet1
     ;;
   wallet2)
     start_demowallet wallet2 8082 wallet2
+    print_local_demowallet_endpoint wallet2
     ;;
   *)
     echo "Usage: $0 [all|wallet1|wallet2]" >&2

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 START_ALL_SELECT="${START_ALL_SELECT:-1}"
 START_ALL_COMPONENTS="${START_ALL_COMPONENTS:-}"
@@ -346,25 +347,4 @@ if component_enabled ppa; then
   step "$LOCAL_HOME/scripts/start-ppa.sh"
 fi
 
-cat <<EOF
-
-Local stack started.
-
-Core:
-- ML API Adapter: http://127.0.0.1:3000
-- Central Ledger: http://127.0.0.1:3001
-- Quoting: http://127.0.0.1:3002
-- Account Lookup: http://127.0.0.1:4002
-
-Pivotal:
-- Web Outbound: http://127.0.0.1:3200
-- Web Inbound: http://127.0.0.1:3201
-- Portal API: http://127.0.0.1:3202
-- Portal UI: http://127.0.0.1:4173
-
-Local monitor:
-- http://127.0.0.1:${LOCAL_UI_PORT:-3400}
-
-Operation Portal:
-- API: http://127.0.0.1:${OPERATION_PORTAL_PORT:-8003}
-EOF
+print_local_start_all_summary "${SELECTED_COMPONENTS[@]}"

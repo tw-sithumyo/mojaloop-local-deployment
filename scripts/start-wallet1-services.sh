@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 ENV_FILE="$CONF_DIR/wallet1-pivotal.env"
 
@@ -23,6 +24,11 @@ fi
 "$LOCAL_HOME/scripts/start-pivotal-auditor.sh"
 "$LOCAL_HOME/scripts/seed-pivotal-participants.sh"
 "$LOCAL_HOME/scripts/start-pivotal-portal-services.sh"
+
+source "$ENV_FILE"
+
+WEB_INBOUND_PORT="${WEB_INBOUND_PORT:-3201}"
+WEB_OUTBOUND_PORT="${WEB_OUTBOUND_PORT:-3200}"
 
 start_service_with_port() {
   local name="$1"
@@ -84,6 +90,7 @@ start_service_without_port() {
   pgrep -af "$pattern" | awk 'NR==1 {print $1}' > "$RUN_DIR/$name.pid" || true
 }
 
-start_service_with_port wallet1-web-inbound 3201 start:apps-web-inbound '(apps-web-inbound|dist/packages/apps/web-inbound/main)'
-start_service_with_port wallet1-web-outbound 3200 start:apps-web-outbound '(apps-web-outbound|dist/packages/apps/web-outbound/main)'
+start_service_with_port wallet1-web-inbound "$WEB_INBOUND_PORT" start:apps-web-inbound '(apps-web-inbound|dist/packages/apps/web-inbound/main)'
+start_service_with_port wallet1-web-outbound "$WEB_OUTBOUND_PORT" start:apps-web-outbound '(apps-web-outbound|dist/packages/apps/web-outbound/main)'
 "$LOCAL_HOME/scripts/start-pivotal-connector-services.sh" wallet1
+print_local_wallet_endpoint_summary wallet1

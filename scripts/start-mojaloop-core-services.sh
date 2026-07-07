@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 mkdir -p "$RUN_DIR/services"
 
@@ -45,3 +46,4 @@ start_service account-lookup-handlers account-lookup-service 4003 env ALS_PROXY_
 start_service quoting-api quoting-service 3002 env QUOTE_SIMPLE_ROUTING_MODE=false QUOTE_PROXY_CACHE__enabled=false QUOTE_PAYLOAD_CACHE__enabled=false npm run start:api
 start_service quoting-handlers quoting-service 3103 env QUOTE_SIMPLE_ROUTING_MODE=false QUOTE_PROXY_CACHE__enabled=false QUOTE_PAYLOAD_CACHE__enabled=false QUOTE_MONITORING_PORT=3103 npm run start:handlers
 start_service central-settlement-api central-settlement 3007 npm run start:api
+print_local_core_endpoints

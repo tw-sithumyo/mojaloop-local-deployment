@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 name="pivotal-app-auditor"
 log_file="$LOG_DIR/$name.log"
@@ -23,11 +24,13 @@ if [ ! -d "$PIVOTAL_HOME/node_modules" ]; then
 fi
 
 if [ -f "$pid_file" ] && kill -0 "$(cat "$pid_file")" 2>/dev/null; then
+  print_local_app_auditor_endpoint
   exit 0
 fi
 
 if pgrep -af "$pattern" >/dev/null 2>&1; then
   pgrep -af "$pattern" | awk 'NR==1 {print $1}' > "$pid_file" || true
+  print_local_app_auditor_endpoint
   exit 0
 fi
 
@@ -41,6 +44,7 @@ for _ in $(seq 1 90); do
   if pgrep -af "$pattern" >/dev/null 2>&1; then
     pgrep -af "$pattern" | awk 'NR==1 {print $1}' > "$pid_file" || true
     if rg -q "Audit consumer is running" "$log_file"; then
+      print_local_app_auditor_endpoint
       exit 0
     fi
   else

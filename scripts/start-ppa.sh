@@ -2,16 +2,19 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/ppa-common.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 ppa_init
 ensure_ppa_dependencies
 
 if [ -f "$PPA_PID_FILE" ] && kill -0 "$(cat "$PPA_PID_FILE")" 2>/dev/null; then
+  print_local_ppa_endpoints
   exit 0
 fi
 
 if pgrep -f "$PPA_ENTRYPOINT" >/dev/null 2>&1; then
   pgrep -f "$PPA_ENTRYPOINT" | awk 'NR==1 {print $1}' > "$PPA_PID_FILE" || true
+  print_local_ppa_endpoints
   exit 0
 fi
 
@@ -50,8 +53,7 @@ fi
 for _ in $(seq 1 30); do
   if curl -fsS "http://${PPA_HOST}:${PPA_PORT}/health" >/dev/null 2>&1; then
     pgrep -f "$PPA_ENTRYPOINT" | awk 'NR==1 {print $1}' > "$PPA_PID_FILE" || true
-    echo "PPA listening on http://${PPA_HOST}:${PPA_PORT}"
-    echo "Kafka topic: $KAFKA_TOPIC_TO_CONSUME"
+    print_local_ppa_endpoints
     exit 0
   fi
   sleep 1

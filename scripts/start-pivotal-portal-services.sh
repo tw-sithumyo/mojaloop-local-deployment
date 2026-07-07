@@ -2,6 +2,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
+source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
 WEB_PIVOTAL_ENV_FILE="$PIVOTAL_HOME/packages/apps/web-pivotal/.env"
 PIVOTAL_PORTAL_ENV_FILE="$PIVOTAL_HOME/packages/portal/.env"
@@ -113,3 +114,5 @@ start_service_with_port \
     "$PIVOTAL_HOME/packages/portal/node_modules/.bin/vite" \
     --host 127.0.0.1 \
     --port "$PIVOTAL_PORTAL_PORT"
+
+print_local_pivotal_endpoints
