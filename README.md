@@ -14,7 +14,7 @@ Tool prerequisites:
   - expected under `tools/jdk-21.0.10+7-jre`
 - Java JDK and Maven
   - expected under `tools/jdk-11.0.27+6`, `tools/jdk-21.0.10+7`, and `tools/apache-maven-3.9.10`
-  - JDK 11 is used to build `Mojaloop-DemoWallet`
+  - JDK 11 is used to build `Mojaloop-DemoWallet` and `ml-thitsawallet-cc`
 - Kafka binaries
   - expected under `tools/kafka_2.13-3.9.1`
 - Docker engine
@@ -57,6 +57,8 @@ Expected workspace layout:
   pivotal-new/                   # optional, only needed for wallet DFSP flows
   pivotal-connector-nestjs/      # optional, wallet connector process for pivotal-new
   Mojaloop-DemoWallet/           # optional, local wallet backend for wallet1/wallet2
+  sdk-scheme-adapter/             # optional, alternative core-connector wallet stack
+  ml-thitsawallet-cc/             # optional, alternative core-connector wallet stack
   reporting-aggregator-svc/         # optional, only needed for local reporting
   tools/
   runtime-root/
@@ -75,6 +77,11 @@ Additional sibling repo for the wallet DFSP flows in this README:
 - `pivotal-new`
 - `pivotal-connector-nestjs`
 - `Mojaloop-DemoWallet`
+
+Additional sibling repos for the alternative core-connector wallet flow:
+
+- `sdk-scheme-adapter`
+- `ml-thitsawallet-cc`
 
 Additional optional repo:
 
@@ -95,6 +102,8 @@ git clone https://github.com/mojaloop/central-settlement.git central-settlement
 git clone https://github.com/ThitsaX/pivotal.git pivotal-new
 git clone https://github.com/ThitsaX/pivotal-connector-nestjs.git pivotal-connector-nestjs
 git clone https://github.com/ThitsaX/Mojaloop-DemoWallet.git Mojaloop-DemoWallet
+git clone https://github.com/mojaloop/sdk-scheme-adapter.git sdk-scheme-adapter
+git clone https://github.com/tw-sithumyo/ml-thitsawallet-cc.git ml-thitsawallet-cc
 git clone https://github.com/mojaloop/reporting-aggregator-svc.git reporting-aggregator-svc
 ```
 
@@ -231,6 +240,34 @@ Current limitation:
 
 - `pivotal` outbound does not expose the older separate local `/lookup`, `/quote`, and `/transfer` test routes; the local tests use `POST /secured/sendmoney`, `PUT /secured/sendmoney/{id}` with `acceptParty`, then `PUT /secured/sendmoney/{id}` with `acceptQuote`
 
+## Core-Connector Wallet Alternative
+
+Pivotal remains the default wallet stack. The repository also supports an alternative
+local-process flow using `sdk-scheme-adapter`, `ml-thitsawallet-cc`, and a small mock
+wallet backend. The two wallet stacks share ports 3200 and 3201, so stop the active
+wallet stack before switching.
+
+Start, onboard, and test the core-connector alternative:
+
+```bash
+local/scripts/stop-wallet-services.sh
+WALLET_STACK=core local/scripts/setup-wallet1.sh
+WALLET_STACK=core local/scripts/setup-wallet2.sh
+WALLET_STACK=core local/scripts/test-wallet1-wallet2-flow.sh
+```
+
+The core-connector flow:
+
+- runs locally without Docker or Docker Compose
+- uses `sdk-scheme-adapter` as the hub-facing DFSP adapter
+- uses `ml-thitsawallet-cc` as the wallet-facing connector
+- starts one mock backend for each wallet
+- onboards both wallets with their SDK inbound callback endpoints
+- verifies the `sendmoney -> acceptParty -> acceptQuote -> transfer` flow
+
+The current payer request includes `to.fspId=wallet2`; identifier-only ALS oracle
+lookup is not configured yet.
+
 ## Reporting Aggregator
 
 The reporting stack is optional and separate from the main Mojaloop bootstrap.
@@ -281,7 +318,7 @@ Service requirements:
 - stop the local web UI: `local/scripts/stop-ui.sh`
 - stop the reporting stack: `local/scripts/stop-reporting-stack.sh`
 - stop Pivotal portal API/UI: `local/scripts/stop-pivotal-portal-services.sh`
-- stop wallet-side Pivotal services: `local/scripts/stop-wallet-services.sh`
+- stop either wallet stack: `local/scripts/stop-wallet-services.sh`
 - stop core services: `local/scripts/stop-services.sh`
 - stop infra: `local/scripts/stop-infra.sh`
 - stop everything: `local/scripts/stop-all.sh`

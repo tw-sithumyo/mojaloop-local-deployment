@@ -4,6 +4,19 @@ set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
 source "$LOCAL_HOME/scripts/print-local-endpoints.sh"
 
+WALLET_STACK="${WALLET_STACK:-pivotal}"
+case "$WALLET_STACK" in
+  pivotal)
+    ;;
+  core|core-connector)
+    exec "$LOCAL_HOME/scripts/start-wallet-stack.sh"
+    ;;
+  *)
+    echo "Unsupported WALLET_STACK: $WALLET_STACK (expected pivotal or core)" >&2
+    exit 1
+    ;;
+esac
+
 ENV_FILE="$CONF_DIR/wallet1-pivotal.env"
 
 if [ ! -f "$ENV_FILE" ]; then

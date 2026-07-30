@@ -3,6 +3,19 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
 
+WALLET_STACK="${WALLET_STACK:-pivotal}"
+case "$WALLET_STACK" in
+  pivotal)
+    ;;
+  core|core-connector)
+    exec env WALLET_STACK=core "$LOCAL_HOME/scripts/test-core-connector-flow.sh"
+    ;;
+  *)
+    echo "Unsupported WALLET_STACK: $WALLET_STACK (expected pivotal or core)" >&2
+    exit 1
+    ;;
+esac
+
 ENV_FILE="$CONF_DIR/wallet1-pivotal.env"
 
 if [ ! -f "$ENV_FILE" ]; then

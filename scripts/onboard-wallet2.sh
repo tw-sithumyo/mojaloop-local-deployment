@@ -3,7 +3,19 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
 
-ENV_FILE="$CONF_DIR/wallet2-pivotal.env"
+WALLET_STACK="${WALLET_STACK:-pivotal}"
+case "$WALLET_STACK" in
+  pivotal)
+    ENV_FILE="$CONF_DIR/wallet2-pivotal.env"
+    ;;
+  core|core-connector)
+    ENV_FILE="$CONF_DIR/wallet2.env"
+    ;;
+  *)
+    echo "Unsupported WALLET_STACK: $WALLET_STACK (expected pivotal or core)" >&2
+    exit 1
+    ;;
+esac
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "Missing wallet2 env file: $ENV_FILE" >&2
@@ -13,6 +25,12 @@ fi
 set -a
 source "$ENV_FILE"
 set +a
+
+if [ "$WALLET_STACK" != "pivotal" ]; then
+  WALLET2_CURRENCY="$CURRENCY"
+  WALLET2_INITIAL_NET_DEBIT_CAP="$INITIAL_NET_DEBIT_CAP"
+  WALLET2_INITIAL_FUNDS="$INITIAL_FUNDS"
+fi
 
 API_BASE="http://127.0.0.1:3001"
 SOURCE_HEADER="wallet2-setup"
@@ -213,6 +231,10 @@ ensure_endpoint FSPIOP_CALLBACK_URL_PARTIES_PUT "http://127.0.0.1:${WEB_INBOUND_
 ensure_endpoint FSPIOP_CALLBACK_URL_PARTIES_SUB_ID_PUT "http://127.0.0.1:${WEB_INBOUND_PORT}/parties/{{partyIdType}}/{{partyIdentifier}}/{{partySubIdOrType}}"
 ensure_endpoint FSPIOP_CALLBACK_URL_PARTIES_PUT_ERROR "http://127.0.0.1:${WEB_INBOUND_PORT}/parties/{{partyIdType}}/{{partyIdentifier}}/error"
 ensure_endpoint FSPIOP_CALLBACK_URL_PARTIES_SUB_ID_PUT_ERROR "http://127.0.0.1:${WEB_INBOUND_PORT}/parties/{{partyIdType}}/{{partyIdentifier}}/{{partySubIdOrType}}/error"
+ensure_endpoint FSPIOP_CALLBACK_URL_PARTICIPANT_PUT "http://127.0.0.1:${WEB_INBOUND_PORT}/participants/{{partyIdType}}/{{partyIdentifier}}"
+ensure_endpoint FSPIOP_CALLBACK_URL_PARTICIPANT_SUB_ID_PUT "http://127.0.0.1:${WEB_INBOUND_PORT}/participants/{{partyIdType}}/{{partyIdentifier}}/{{partySubIdOrType}}"
+ensure_endpoint FSPIOP_CALLBACK_URL_PARTICIPANT_PUT_ERROR "http://127.0.0.1:${WEB_INBOUND_PORT}/participants/{{partyIdType}}/{{partyIdentifier}}/error"
+ensure_endpoint FSPIOP_CALLBACK_URL_PARTICIPANT_SUB_ID_PUT_ERROR "http://127.0.0.1:${WEB_INBOUND_PORT}/participants/{{partyIdType}}/{{partyIdentifier}}/{{partySubIdOrType}}/error"
 ensure_endpoint FSPIOP_CALLBACK_URL_QUOTES "http://127.0.0.1:${WEB_INBOUND_PORT}"
 ensure_endpoint FSPIOP_CALLBACK_URL_TRANSFER_POST "http://127.0.0.1:${WEB_INBOUND_PORT}/transfers"
 ensure_endpoint FSPIOP_CALLBACK_URL_TRANSFER_PUT "http://127.0.0.1:${WEB_INBOUND_PORT}/transfers/{{transferId}}"

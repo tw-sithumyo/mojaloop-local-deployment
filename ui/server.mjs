@@ -138,6 +138,7 @@ const serviceDefinitions = [
         group: 'wallet',
         pidFiles: ['wallet1-web-outbound.pid', 'wallet2-web-outbound.pid'],
         port: 3200,
+        requirePid: true,
         logFiles: ['wallet1-web-outbound.log', 'wallet2-web-outbound.log'],
     },
     {
@@ -177,6 +178,7 @@ const serviceDefinitions = [
         group: 'wallet',
         pidFiles: ['wallet1-web-inbound.pid', 'wallet2-web-inbound.pid'],
         port: 3201,
+        requirePid: true,
         logFiles: ['wallet1-web-inbound.log', 'wallet2-web-inbound.log'],
     },
     {
@@ -210,6 +212,59 @@ const serviceDefinitions = [
         port: 8082,
         healthUrl: 'http://127.0.0.1:8082/public/heart_beat',
         logFiles: ['wallet2-demowallet.log'],
+    },
+    {
+        id: 'wallet1-sdk',
+        name: 'Wallet1 SDK Scheme Adapter',
+        group: 'wallet',
+        pidFiles: ['wallet1-sdk.pid'],
+        port: 3200,
+        requirePid: true,
+        healthUrl: 'http://127.0.0.1:3200/',
+        logFiles: ['wallet1-sdk.log'],
+    },
+    {
+        id: 'wallet2-sdk',
+        name: 'Wallet2 SDK Scheme Adapter',
+        group: 'wallet',
+        pidFiles: ['wallet2-sdk.pid'],
+        port: 3210,
+        healthUrl: 'http://127.0.0.1:3210/',
+        logFiles: ['wallet2-sdk.log'],
+    },
+    {
+        id: 'wallet1-cc',
+        name: 'Wallet1 Core Connector',
+        group: 'wallet',
+        pidFiles: ['wallet1-cc.pid'],
+        port: 3303,
+        logFiles: ['wallet1-cc.log'],
+    },
+    {
+        id: 'wallet2-cc',
+        name: 'Wallet2 Core Connector',
+        group: 'wallet',
+        pidFiles: ['wallet2-cc.pid'],
+        port: 3304,
+        logFiles: ['wallet2-cc.log'],
+    },
+    {
+        id: 'wallet1-backend',
+        name: 'Wallet1 Mock Backend',
+        group: 'wallet',
+        pidFiles: ['wallet1-backend.pid'],
+        port: 3403,
+        healthUrl: 'http://127.0.0.1:3403/health',
+        logFiles: ['wallet1-backend.log'],
+    },
+    {
+        id: 'wallet2-backend',
+        name: 'Wallet2 Mock Backend',
+        group: 'wallet',
+        pidFiles: ['wallet2-backend.pid'],
+        port: 3404,
+        healthUrl: 'http://127.0.0.1:3404/health',
+        logFiles: ['wallet2-backend.log'],
     },
     {
         id: 'operation-portal',
@@ -367,7 +422,9 @@ const summarizeService = async (service) => {
         };
 
     const log = resolveLog(service);
-    const running = pid != null || portOpen || health.state === 'ok';
+    const running = service.requirePid
+        ? pid != null
+        : pid != null || portOpen || health.state === 'ok';
 
     return {
         id: service.id,
