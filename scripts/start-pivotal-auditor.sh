@@ -47,9 +47,6 @@ for _ in $(seq 1 90); do
       print_local_app_auditor_endpoint
       exit 0
     fi
-  else
-    echo "$name exited during startup; see $log_file" >&2
-    exit 1
   fi
   sleep 1
 done

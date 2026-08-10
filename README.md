@@ -127,6 +127,24 @@ This starts infra, Mojaloop core services, wallet1, wallet2, Pivotal portal API/
 START_ALL_REPORTING=1 START_ALL_TAZAMA=1 START_ALL_PPA=1 local/scripts/start-all.sh
 ```
 
+Generate randomized successful transfers for testing the Pivotal dashboard:
+
+```bash
+local/scripts/generate-dashboard-transfers.sh
+```
+
+The generator defaults to 20 `wallet1 -> wallet2` transfers, amounts from 5 to 75, and a mix of
+locally registered use cases. It restarts only app-auditor after the batch so the dashboard rollup
+is immediately refreshed. Override its inputs when needed:
+
+```bash
+DASHBOARD_TRANSFER_COUNT=30 \
+DASHBOARD_TRANSFER_MIN_AMOUNT=10 \
+DASHBOARD_TRANSFER_MAX_AMOUNT=250 \
+DASHBOARD_TRANSFER_SUB_SCENARIOS=PERSON_TO_PERSON,PERSON_TO_BUSINESS \
+local/scripts/generate-dashboard-transfers.sh
+```
+
 Useful flags:
 
 - `START_ALL_NPM_CI=auto|always|skip`

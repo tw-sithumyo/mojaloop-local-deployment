@@ -37,25 +37,26 @@ if [ ! -f "$private_key" ]; then
   exit 1
 fi
 
-node - "$private_key" "$payload_file" <<'NODE'
+if [ "$payload_file" = "-" ]; then
+  payload_json="$(cat)"
+else
+  if [ ! -f "$payload_file" ]; then
+    echo "Payload file not found: $payload_file" >&2
+    exit 1
+  fi
+  payload_json="$(cat "$payload_file")"
+fi
+
+JWT_PAYLOAD="$payload_json" node - "$private_key" <<'NODE'
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 
 const privateKeyPath = process.argv[2];
-const payloadPath = process.argv[3];
-
-const readPayload = () => {
-  if (payloadPath === '-') {
-    return fs.readFileSync(0, 'utf8');
-  }
-
-  return fs.readFileSync(payloadPath, 'utf8');
-};
 
 const toBase64Url = (value) => Buffer.from(value, 'utf8').toString('base64url');
 
 const privateKey = fs.readFileSync(privateKeyPath);
-const payload = JSON.parse(readPayload());
+const payload = JSON.parse(process.env.JWT_PAYLOAD ?? '');
 
 if (payload == null || typeof payload !== 'object' || Array.isArray(payload)) {
   throw new Error('JWT payload must be a JSON object.');

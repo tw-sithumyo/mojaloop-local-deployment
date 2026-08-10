@@ -3,6 +3,9 @@ set -euo pipefail
 
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/env.sh"
 
+# Preserve per-run overrides before wallet defaults are loaded.
+REQUEST_SUB_SCENARIO="${QUOTE_SUB_SCENARIO:-}"
+
 WALLET_STACK="${WALLET_STACK:-pivotal}"
 case "$WALLET_STACK" in
   pivotal)
@@ -43,21 +46,36 @@ set -a
 source "$WALLET2_ENV_FILE"
 set +a
 
+QUOTE_SUB_SCENARIO="${REQUEST_SUB_SCENARIO:-${QUOTE_SUB_SCENARIO:-PERSON_TO_PERSON}}"
+export QUOTE_SUB_SCENARIO
+
 WALLET2_CONNECTOR_ID="$CONNECTOR_ID"
 WALLET2_PARTY_ID_TYPE_VALUE="$WALLET2_PARTY_ID_TYPE"
 WALLET2_PARTY_ID_VALUE="$WALLET2_PARTY_ID"
 
-AUTH_HEADER='Bearer a.b.c'
 OUTBOUND_BASE="http://127.0.0.1:${WALLET1_OUTBOUND_PORT}"
 TRANSFER_AMOUNT="${TRANSFER_AMOUNT:-10}"
+ACCESS_PRIVATE_KEY="${ACCESS_PRIVATE_KEY:-$CONF_DIR/access-keys/wallet1-access-private-key.pem}"
+
+if [ ! -f "$ACCESS_PRIVATE_KEY" ]; then
+  echo "Missing wallet1 access private key: $ACCESS_PRIVATE_KEY" >&2
+  exit 1
+fi
+
+sign_body() {
+  local body="$1"
+  printf '%s' "$body" | "$LOCAL_HOME/scripts/sign-pivotal-access-jwt.sh" "$ACCESS_PRIVATE_KEY" -
+}
 
 post_json() {
   local path="$1"
   local body="$2"
+  local authorization
+  authorization="$(sign_body "$body")"
   curl -fsS \
     -H 'Content-Type: application/json' \
     -H "fspiop-source: ${WALLET1_CONNECTOR_ID}" \
-    -H "authorization: ${AUTH_HEADER}" \
+    -H "authorization: ${authorization}" \
     "$OUTBOUND_BASE$path" \
     --data-raw "$body"
 }
@@ -65,11 +83,13 @@ post_json() {
 put_json() {
   local path="$1"
   local body="$2"
+  local authorization
+  authorization="$(sign_body "$body")"
   curl -fsS \
     -X PUT \
     -H 'Content-Type: application/json' \
     -H "fspiop-source: ${WALLET1_CONNECTOR_ID}" \
-    -H "authorization: ${AUTH_HEADER}" \
+    -H "authorization: ${authorization}" \
     "$OUTBOUND_BASE$path" \
     --data-raw "$body"
 }
